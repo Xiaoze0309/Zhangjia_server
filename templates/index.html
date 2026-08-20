@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>樟嘉评级</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: #fdf6e3;
+            padding-bottom: 70px;
+            overflow-x: hidden;
+        }
+        .page,
+        .card,
+        .modal-box,
+        .bottom-nav button {
+            transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(253, 246, 227, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 16px 8px;
+            border-bottom: 1px solid #f0e4c8;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #b8860b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 span {
+            font-size: 14px;
+            color: #b8a68b;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid #f0e4c8;
+            background: #fff;
+            outline: none;
+            font-size: 14px;
+        }
+        .search-box input:focus {
+            border-color: #d4a843;
+        }
+        .search-box button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: #d4a843;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .search-box button:active {
+            transform: scale(0.92);
+        }
+        .announcement {
+            background: #d4a843;
+            color: #fff;
+            padding: 4px 12px;
+            font-size: 13px;
+            text-align: center;
+            border-radius: 0;
+            margin: 0;
+            box-shadow: 0 1px 4px rgba(212, 168, 67, 0.2);
+            position: relative;
+            z-index: 5;
+        }
+        .tag-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 0 4px;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+        .tag-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .tag-bar span {
+            background: #eee8dd;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #5a4a36;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .tag-bar span:active {
+            transform: scale(0.90);
+        }
+        .tag-bar span.active {
+            background: #d4a843;
+            color: #fff;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 12px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+            animation: cardPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .card:active {
+            transform: scale(0.96);
+        }
+        @keyframes cardPop {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            background: #eee;
+        }
+        .card .info {
+            padding: 10px;
+        }
+        .card .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3d2b1a;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card .meta {
+            font-size: 11px;
+            color: #b8a68b;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid #f0e4c8;
+            display: flex;
+            padding: 6px 0 env(safe-area-inset-bottom, 8px);
+            z-index: 100;
+        }
+        .bottom-nav button {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            color: #b8a68b;
+            padding: 4px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: color 0.2s, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .bottom-nav button:active {
+            transform: scale(0.88);
+        }
+        .bottom-nav button.active {
+            color: #007aff;
+            font-weight: 600;
+        }
+        .bottom-nav button .icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+        .bottom-nav .post-btn .icon {
+            font-size: 28px;
+            background: #d4a843;
+            color: #fff;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -18px;
+            box-shadow: 0 4px 16px rgba(212, 168, 67, 0.3);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .bottom-nav .post-btn:active .icon {
+            transform: scale(0.88);
+        }
+        .page {
+            display: none;
+            animation: pageFade 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes pageFade {
+            0% {
+                opacity: 0;
+                transform: translateY(16px) scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes modalPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.85) translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .modal-box h2 {
+            margin-bottom: 16px;
+            color: #3d2b1a;
+        }
+        .modal-box input,
+        .modal-box textarea,
+        .modal-box select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            font-size: 14px;
+            background: #fcf9f2;
+        }
+        .modal-box input:focus,
+        .modal-box textarea:focus,
+        .modal-box select:focus {
+            border-color: #d4a843;
+            outline: none;
+        }
+        .modal-box textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .modal-actions button:active {
+            transform: scale(0.94);
+        }
+        .btn-primary {
+            background: #d4a843;
+            color: #fff;
+        }
+        .btn-secondary {
+            background: #eee8dd;
+            color: #5a4a36;
+        }
+        .post-detail {
+            padding: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #3d2b1a;
+            padding: 4px 0;
+            transition: transform 0.15s;
+        }
+        .back-btn:active {
+            transform: scale(0.88);
+        }
+        .carousel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            margin: 12px 0;
+            background: #000;
+        }
+        .carousel-track {
+            display: flex;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            touch-action: pan-y;
+        }
+        .carousel-track img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            flex-shrink: 0;
+            background: #1a1a1a;
+        }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 0;
+        }
+        .carousel-dots span {
+            width: 8px;
+            height: 8px;
+            background: #ccc;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .carousel-dots span.active {
+            background: #d4a843;
+            transform: scale(1.2);
+        }
+        .like-btn {
+            font-size: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            transition: transform 0.15s;
+        }
+        .like-btn:active {
+            transform: scale(1.3);
+        }
+        .comment-input {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .comment-input input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #eee;
+            outline: none;
+        }
+        .comment-input input:focus {
+            border-color: #d4a843;
+        }
+        .comment-input button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background: #d4a843;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .comment-input button:active {
+            transform: scale(0.92);
+        }
+        .comment-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f0e8;
+            animation: commentSlide 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .comment-item .floor {
+            font-size: 11px;
+            color: #999;
+            margin-left: 6px;
+        }
+        .comment-item .username {
+            color: #b8860b;
+            font-weight: bold;
+        }
+        .comment-item .time {
+            font-size: 11px;
+            color: #ccc;
+            margin-left: 8px;
+        }
+        .comment-item .content {
+            margin: 4px 0 6px 0;
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
+        }
+        @keyframes commentSlide {
+            0% {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .profile-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+            margin: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .profile-card .avatar {
+            font-size: 48px;
+        }
+        .profile-card .name {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 8px 0;
+        }
+        .profile-card .email {
+            color: #b8a68b;
+            font-size: 14px;
+        }
+        .settings-section {
+            margin: 16px;
+            background: #fff;
+            border-radius: 24px;
+            padding: 16px;
+        }
+        .settings-section h3 {
+            color: #3d2b1a;
+            margin-bottom: 12px;
+        }
+        .settings-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0e4c8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        .settings-item .label {
+            color: #5a4a36;
+        }
+        .settings-item .value {
+            color: #b8a68b;
+            font-size: 13px;
+        }
+        .about-section {
+            background: #fff;
+            border-radius: 24px;
+            padding: 20px;
+            margin: 16px;
+            text-align: center;
+        }
+        .about-section .wechat {
+            color: #007aff;
+            font-weight: 600;
+            margin: 4px 0;
+        }
+        .toast {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            z-index: 300;
+            display: none;
+            animation: toastPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes toastPop {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+
+    <div class="header">
+        <h1>⭐ 樟嘉评级 <span id="authBtn" onclick="toggleAuth()">登录</span></h1>
+        <div class="search-box">
+            <input id="searchInput" placeholder="搜索帖子..." oninput="loadPosts()">
+            <button onclick="loadPosts()">搜索</button>
+        </div>
+    </div>
+
+    <div class="announcement" id="announcement">📢 欢迎使用樟嘉评级！专注古币评级。</div>
+    <div class="tag-bar" id="tagBar"></div>
+
+    <div id="pageFeed" class="page active">
+        <div class="grid" id="postGrid"></div>
+    </div>
+
+    <div id="pageDetail" class="page">
+        <div class="post-detail" id="detailContainer"></div>
+    </div>
+
+    <div id="pageProfile" class="page">
+        <div id="profileContainer"></div>
+        <div class="settings-section">
+            <h3>⚙️ 设置</h3>
+            <div class="settings-item"><span class="label">版本</span><span class="value">v2.0</span></div>
+            <div class="settings-item"><span class="label">退出</span><span class="value" style="color:#d4a843;cursor:pointer;" onclick="logout()">点击退出</span></div>
+        </div>
+        <div class="about-section">
+            <h3>📱 关于我们</h3>
+            <p style="margin:8px 0;">开发者</p>
+            <div class="wechat">微信：xzbhks3871315753</div>
+            <div class="wechat">微信：LZCZ19793385313</div>
+            <p style="margin-top:8px;font-size:12px;color:#b8a68b;">樟嘉评级 · 古币工作室</p>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="active" onclick="switchPage('feed')"><span class="icon">📄</span>首页</button>
+        <button class="post-btn" onclick="openPostModal()"><span class="icon">+</span></button>
+        <button onclick="switchPage('profile')"><span class="icon">👤</span>用户</button>
+    </div>
+
+    <!-- 登录/注册弹窗 -->
+    <div class="modal" id="authModal">
+        <div class="modal-box">
+            <h2 id="authTitle">登录</h2>
+            <input id="authUsername" placeholder="用户名">
+            <input id="authPassword" type="password" placeholder="密码">
+            <input id="authEmail" placeholder="邮箱（选填）" style="display:none;">
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeAuth()">取消</button>
+                <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">登录</button>
+            </div>
+            <p style="margin-top:12px;font-size:13px;color:#b8a68b;text-align:center;" id="authToggle">没有账号？<span style="color:#d4a843;cursor:pointer;" onclick="toggleAuthMode()">注册</span></p>
+        </div>
+    </div>
+
+    <!-- 发帖弹窗（单一分类） -->
+    <div class="modal" id="postModal">
+        <div class="modal-box">
+            <h2>📝 发布帖子</h2>
+            <input id="postTitle" placeholder="标题">
+            <textarea id="postContent" placeholder="内容"></textarea>
+            <select id="postTag">
+                <option value="">选择分类</option>
+                <option value="先秦">先秦</option>
+                <option value="秦汉">秦汉</option>
+                <option value="三国两晋南北朝">三国两晋南北朝</option>
+                <option value="隋唐">隋唐</option>
+                <option value="五代十国">五代十国</option>
+                <option value="两宋">两宋</option>
+                <option value="辽金西夏">辽金西夏</option>
+                <option value="元明">元明</option>
+                <option value="清代">清代</option>
+                <option value="花钱/厌胜钱">花钱/厌胜钱</option>
+                <option value="外国古币">外国古币</option>
+                <option value="樟嘉专区">樟嘉专区</option>
+            </select>
+            <input type="file" id="postImages" accept="image/*" multiple>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closePostModal()">取消</button>
+                <button class="btn-primary" id="submitPostBtn" onclick="submitPost()">发布</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentPage = 'feed';
+        let authMode = 'login';
+        let slideTimer = null;
+        let currentPostId = null;
+
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            clearTimeout(t._hide);
+            t._hide = setTimeout(() => t.style.display = 'none', 2000);
+        }
+
+        async function api(url, opts = {}) {
+            const res = await fetch(url, opts);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || '请求失败');
+            }
+            return res.json();
+        }
+
+        async function loadUser() {
+            try {
+                const data = await api('/api/me');
+                currentUser = data;
+                document.getElementById('authBtn').textContent = data.username;
+            } catch (e) {
+                currentUser = null;
+                document.getElementById('authBtn').textContent = '登录';
+            }
+        }
+
+        async function loadPosts() {
+            const search = document.getElementById('searchInput').value;
+            const tag = document.querySelector('.tag-bar span.active')?.textContent?.replace('#', '') || '';
+            let url = '/api/posts';
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (tag) params.append('tag', tag);
+            if (params.toString()) url += '?' + params.toString();
+            try {
+                const posts = await api(url);
+                const grid = document.getElementById('postGrid');
+                if (!posts.length) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#b8a68b;padding:40px;">暂无帖子</div>';
+                    return;
+                }
+                grid.innerHTML = posts.map(p => {
+                    const tagDisplay = p.tag ? '#' + p.tag : '未分类';
+                    return `<div class="card" onclick="openDetail(${p.id})">
+                        <img src="${p.images ? '/uploads/' + p.images.split(',')[0] : ''}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23eee%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23ccc%22 font-size=%2240%22%3E📸%3C/text%3E%3C/svg%3E'">
+                        <div class="info">
+                            <div class="title">${escapeHtml(p.title)}</div>
+                            <div class="meta"><span>❤️ ${p.like_count||0} 💬 ${p.comment_count||0}</span><span>${tagDisplay}</span></div>
+                        </div>
+                    </div>`;
+                }).join('');
+                document.querySelectorAll('.card').forEach((el, i) => el.style.animationDelay = (i * 0.05) + 's');
+            } catch (e) {
+                toast('加载帖子失败');
+            }
+        }
+
+        async function loadTags() {
+            try {
+                const tags = await api('/api/tags');
+                const bar = document.getElementById('tagBar');
+                bar.innerHTML = '<span class="active" onclick="filterTag(this,\'\')">全部</span>' +
+                    tags.map(t => `<span onclick="filterTag(this,'${t.tag}')">#${t.tag}</span>`).join('');
+            } catch (e) {}
+        }
+
+        function filterTag(el, tag) {
+            document.querySelectorAll('.tag-bar span').forEach(s => s.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('searchInput').value = '';
+            loadPosts();
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        async function openDetail(id) {
+            try {
+                const post = await api('/api/posts/' + id);
+                currentPostId = post.id;
+                const container = document.getElementById('detailContainer');
+                let imagesHtml = '';
+                if (post.images) {
+                    const imgs = post.images.split(',');
+                    imagesHtml = `<div class="carousel" id="carousel">
+                        <div class="carousel-track" id="carouselTrack">${imgs.map(img => `<img src="/uploads/${img}" draggable="false">`).join('')}</div>
+                        <div class="carousel-dots" id="carouselDots">${imgs.map((_, i) => `<span class="${i===0?'active':''}" onclick="slideTo(${i})"></span>`).join('')}</div>
+                    </div>`;
+                }
+                const tagDisplay = post.tag ? '#' + post.tag : '未分类';
+                const commentHtml = post.comments.map((c, idx) => `
+                    <div class="comment-item">
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span class="username">${escapeHtml(c.username)}</span>
+                            <span class="floor">#${idx+1}</span>
+                            <span class="time">${new Date(c.created_at).toLocaleString()}</span>
+                        </div>
+                        <div class="content">${escapeHtml(c.content)}</div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = `
+                    <button class="back-btn" onclick="switchPage('feed')">‹ 返回</button>
+                    <h2 style="margin:8px 0;">${escapeHtml(post.title)}</h2>
+                    <p style="color:#b8a68b;font-size:13px;">${post.username || '匿名'} · ${tagDisplay}</p>
+                    ${imagesHtml}
+                    <p style="margin:12px 0;">${escapeHtml(post.content||'')}</p>
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <button class="like-btn" onclick="toggleLike(${post.id})">${post.liked ? '❤️' : '🤍'} <span id="likeCount">${post.like_count}</span></button>
+                        <span>💬 ${post.comment_count}</span>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <h4 style="border-bottom:2px solid #d4a843;padding-bottom:6px;">💬 全部评论</h4>
+                        <div id="commentList">${commentHtml}</div>
+                    </div>
+                    <div class="comment-input" style="margin-top:12px;">
+                        <input id="commentInput" placeholder="说点什么...">
+                        <button onclick="submitComment()">发送</button>
+                    </div>
+                `;
+                if (post.images) {
+                    const imgs = post.images.split(',');
+                    if (imgs.length > 1) startCarousel(imgs.length);
+                }
+                switchPage('detail');
+            } catch (e) {
+                toast('加载详情失败');
+            }
+        }
+
+        function startCarousel(len) {
+            if (slideTimer) clearInterval(slideTimer);
+            let idx = 0;
+            slideTimer = setInterval(() => {
+                idx = (idx + 1) % len;
+                slideTo(idx);
+            }, 3000);
+            window.carouselLen = len;
+        }
+
+        function slideTo(idx) {
+            const track = document.getElementById('carouselTrack');
+            const dots = document.querySelectorAll('#carouselDots span');
+            if (!track || !dots.length) return;
+            track.style.transform = `translateX(-${idx * 100}%)`;
+            dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        }
+
+        async function toggleLike(id) {
+            if (!currentUser) { toast('请先登录'); return; }
+            try {
+                const res = await api('/api/posts/' + id + '/like', { method: 'POST' });
+                const btn = document.querySelector('.like-btn');
+                const count = document.getElementById('likeCount');
+                if (res.status === 'liked') {
+                    btn.innerHTML = '❤️ <span id="likeCount">' + (parseInt(count.textContent) + 1) + '</span>';
+                } else {
+                    btn.innerHTML = '🤍 <span id="likeCount">' + (parseInt(count.textContent) - 1) + '</span>';
+                }
+            } catch (e) {
+                toast('点赞失败');
+            }
+        }
+
+        async function submitComment() {
+            const input = document.getElementById('commentInput');
+            const content = input.value.trim();
+            if (!content) { toast('请填写评论内容'); return; }
+            if (!currentUser) { toast('请先登录'); return; }
+            if (!currentPostId) { toast('帖子ID丢失，请刷新重试'); return; }
+
+            try {
+                await api('/api/posts/' + currentPostId + '/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                input.value = '';
+                const post = await api('/api/posts/' + currentPostId);
+                const list = document.getElementById('commentList');
+                list.innerHTML = post.comments.map((c, idx) => `
+                    <div class="comment-item">
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span class="username">${escapeHtml(c.username)}</span>
+                            <span class="floor">#${idx+1}</span>
+                            <span class="time">${new Date(c.created_at).toLocaleString()}</span>
+                        </div>
+                        <div class="content">${escapeHtml(c.content)}</div>
+                    </div>
+                `).join('');
+                const span = document.querySelector('.like-btn + span');
+                if (span) span.textContent = '💬 ' + post.comment_count;
+                toast('评论成功');
+            } catch (e) {
+                toast('评论发送失败: ' + e.message);
+            }
+        }
+
+        function toggleAuth() {
+            if (currentUser) { logout(); return; }
+            document.getElementById('authModal').classList.add('active');
+            document.getElementById('authTitle').textContent = '登录';
+            document.getElementById('authSubmitBtn').textContent = '登录';
+            document.getElementById('authEmail').style.display = 'none';
+            document.getElementById('authToggle').innerHTML = '没有账号？<span style="color:#d4a843;cursor:pointer;" onclick="toggleAuthMode()">注册</span>';
+            authMode = 'login';
+        }
+
+        function closeAuth() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        function toggleAuthMode() {
+            if (authMode === 'login') {
+                authMode = 'register';
+                document.getElementById('authTitle').textContent = '注册';
+                document.getElementById('authSubmitBtn').textContent = '注册';
+                document.getElementById('authEmail').style.display = 'block';
+                document.getElementById('authToggle').innerHTML = '已有账号？<span style="color:#d4a843;cursor:pointer;" onclick="toggleAuthMode()">登录</span>';
+            } else {
+                authMode = 'login';
+                document.getElementById('authTitle').textContent = '登录';
+                document.getElementById('authSubmitBtn').textContent = '登录';
+                document.getElementById('authEmail').style.display = 'none';
+                document.getElementById('authToggle').innerHTML = '没有账号？<span style="color:#d4a843;cursor:pointer;" onclick="toggleAuthMode()">注册</span>';
+            }
+        }
+
+        async function submitAuth() {
+            const username = document.getElementById('authUsername').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const email = document.getElementById('authEmail').value.trim();
+            if (!username || !password) { toast('请填写完整'); return; }
+            const body = JSON.stringify({ username, password, email });
+            try {
+                if (authMode === 'login') {
+                    const data = await api('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+                    currentUser = data.user;
+                    document.getElementById('authBtn').textContent = currentUser.username;
+                    closeAuth();
+                    toast('登录成功');
+                    loadPosts();
+                    loadProfile();
+                } else {
+                    await api('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+                    toast('注册成功，请登录');
+                    toggleAuthMode();
+                }
+            } catch (err) {
+                toast(err.message || '操作失败');
+            }
+        }
+
+        async function logout() {
+            try {
+                await api('/api/logout', { method: 'POST' });
+            } catch (e) {}
+            currentUser = null;
+            document.getElementById('authBtn').textContent = '登录';
+            toast('已退出');
+            loadPosts();
+            loadProfile();
+        }
+
+        function openPostModal() {
+            if (!currentUser) { toast('请先登录'); return; }
+            document.getElementById('postModal').classList.add('active');
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.remove('active');
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postContent').value = '';
+            document.getElementById('postImages').value = '';
+            document.getElementById('postTag').value = '';
+        }
+
+        async function submitPost() {
+            const btn = document.getElementById('submitPostBtn');
+            if (btn.disabled) return;
+            btn.disabled = true;
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            const tag = document.getElementById('postTag').value;
+            if (!title || !tag) { toast('标题和分类必填'); btn.disabled = false; return; }
+            const fd = new FormData();
+            fd.append('title', title);
+            fd.append('content', content);
+            fd.append('tag', tag);
+            const files = document.getElementById('postImages').files;
+            for (let f of files) fd.append('images', f);
+            try {
+                await fetch('/api/posts', { method: 'POST', body: fd });
+                closePostModal();
+                loadPosts();
+                toast('发布成功');
+            } catch (e) {
+                toast('发布失败');
+            }
+            btn.disabled = false;
+        }
+
+        function switchPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            if (page === 'feed') {
+                document.getElementById('pageFeed').classList.add('active');
+                document.querySelectorAll('.card').forEach((el, i) => {
+                    el.style.animation = 'none';
+                    setTimeout(() => el.style.animation = `cardPop 0.4s cubic-bezier(.34, 1.56, .64, 1) ${i*0.05}s both`, 10);
+                });
+            } else if (page === 'detail') {
+                document.getElementById('pageDetail').classList.add('active');
+            } else if (page === 'profile') {
+                document.getElementById('pageProfile').classList.add('active');
+                loadProfile();
+            }
+            document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+            const map = { feed: 0, profile: 2 };
+            if (map[page] !== undefined) document.querySelectorAll('.bottom-nav button')[map[page]]?.classList.add('active');
+        }
+
+        async function loadProfile() {
+            if (!currentUser) {
+                document.getElementById('profileContainer').innerHTML = '<div class="profile-card"><p>请先登录</p></div>';
+                return;
+            }
+            try {
+                const posts = await api('/api/posts?user_id=' + currentUser.id);
+                document.getElementById('profileContainer').innerHTML = `
+                    <div class="profile-card">
+                        <div class="avatar">👤</div>
+                        <div class="name">${currentUser.username}</div>
+                        <div class="email">${currentUser.email || '未绑定邮箱'}</div>
+                    </div>
+                    <div style="padding:0 16px;"><h3>我的帖子 (${posts.length})</h3>
+                    <div class="grid">${posts.map(p => `
+                        <div class="card" onclick="openDetail(${p.id})">
+                            <img src="${p.images ? '/uploads/'+p.images.split(',')[0] : ''}" onerror="this.style.display='none'">
+                            <div class="info"><div class="title">${escapeHtml(p.title)}</div></div>
+                        </div>
+                    `).join('')}</div></div>
+                `;
+            } catch (e) {
+                document.getElementById('profileContainer').innerHTML = '<div class="profile-card"><p>加载失败</p></div>';
+            }
+        }
+
+        loadUser();
+        loadPosts();
+        loadTags();
+    </script>
+</body>
+</html>
+
