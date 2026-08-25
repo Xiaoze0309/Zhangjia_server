@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>樟嘉评级</title>
-    <link rel="icon" href="/static/favicon.jpg" type="image/jpeg">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, system-ui, sans-serif;
             background: #fdf6e3;
@@ -77,129 +76,29 @@
         .bottom-nav button.active { color: #d4a843; font-weight: 600; }
         .bottom-nav button .icon { font-size: 22px; line-height: 1; }
 
+        /* 浮动发帖按钮 - 仅首页显示 */
         .float-post-btn {
             position: fixed;
             bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            width: 120px;
-            height: 44px;
-            border-radius: 50px;
-            background: rgba(212, 168, 67, 0.75);
-            backdrop-filter: blur(20px) saturate(200%);
-            -webkit-backdrop-filter: blur(20px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 24px rgba(212, 168, 67, 0.25);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #d4a843;
             color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            border: none;
+            box-shadow: 0 4px 20px rgba(212, 168, 67, 0.5);
+            font-size: 32px;
             cursor: pointer;
             z-index: 101;
-            transition: all 0.2s var(--ease-spring);
+            transition: transform 0.2s var(--ease-spring);
             display: none;
             align-items: center;
             justify-content: center;
-            gap: 6px;
         }
         .float-post-btn:active {
-            transform: translateX(-50%) scale(0.94);
-            background: rgba(212, 168, 67, 0.85);
-            box-shadow: 0 4px 12px rgba(212, 168, 67, 0.15);
-        }
-
-        .admin-reports-btn {
-            position: fixed;
-            bottom: 80px;
-            left: 12px;
-            z-index: 101;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 30px;
-            padding: 4px 14px;
-            font-size: 12px;
-            color: #5a4a36;
-            cursor: pointer;
-            transition: all 0.2s var(--ease-smooth);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            display: none;
-        }
-        .admin-reports-btn:active { transform: scale(0.92); }
-
-        .announcement-glass {
-            position: relative;
-            margin: 8px 16px 0;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.35);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-            transform: perspective(800px) rotateX(1.5deg) translateZ(2px);
-            transition: transform 0.3s var(--ease-smooth), opacity 0.3s var(--ease-smooth);
-            z-index: 5;
-        }
-        .announcement-glass.hidden { display: none; }
-        .announcement-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
-        .announcement-content span {
-            font-size: 13px;
-            color: #3d2b1a;
-            flex: 1;
-        }
-        .announcement-close {
-            background: rgba(0, 0, 0, 0.08);
-            border: none;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            font-size: 16px;
-            line-height: 28px;
-            text-align: center;
-            color: #5a4a36;
-            cursor: pointer;
-            transition: all 0.2s var(--ease-smooth);
-            flex-shrink: 0;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-        .announcement-close:active {
-            transform: scale(0.88);
-            background: rgba(0, 0, 0, 0.15);
-        }
-
-        .logo-container {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(12px) saturate(180%);
-            -webkit-backdrop-filter: blur(12px) saturate(180%);
-            padding: 4px 12px 4px 6px;
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-            transition: transform 0.3s var(--ease-smooth);
-        }
-        .logo-container img {
-            height: 34px;
-            width: auto;
-            display: block;
-            border-radius: 50%;
-        }
-        .brand-text {
-            font-size: 22px;
-            font-weight: 600;
-            color: #b8860b;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
+            transform: translateX(-50%) scale(0.88);
         }
 
         .avatar-circle {
@@ -226,7 +125,6 @@
             height: 36px;
             font-size: 18px;
         }
-
         .page { display: none; }
         .page.active { display: block; animation: fadeUp 0.3s var(--ease-smooth) both; }
         @keyframes fadeUp {
@@ -467,6 +365,14 @@
         .modal-actions { display: flex; gap: 12px; }
         .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; transition: transform 0.2s var(--ease-spring); }
         .modal-actions button:active { transform: scale(0.94); }
+        .announcement {
+            background: #d4a843;
+            color: #fff;
+            padding: 4px 12px;
+            font-size: 13px;
+            text-align: center;
+            margin: 0;
+        }
         .settings-item {
             padding: 12px 0;
             border-bottom: 1px solid #f0e4c8;
@@ -501,150 +407,14 @@
         .dm-message.mine { text-align: right; }
         .dm-message.mine .bubble { background: #d4a843; color: #fff; }
         .dm-message.other .bubble { background: rgba(255,255,255,0.3); color: #3d2b1a; }
-
-        .privacy-links {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 8px;
-        }
-        .privacy-links a {
-            color: #007aff;
-            text-decoration: none;
-            font-size: 14px;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.04);
-        }
-        .privacy-links a:last-child { border-bottom: none; }
-        .privacy-links a:hover { text-decoration: underline; }
-
-        .admin-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            padding-bottom: 8px;
-        }
-        .admin-tab {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 20px;
-            background: transparent;
-            font-size: 13px;
-            color: #b8a68b;
-            cursor: pointer;
-            transition: all 0.2s var(--ease-smooth);
-        }
-        .admin-tab.active {
-            background: #d4a843;
-            color: #fff;
-        }
-        .admin-tab:active { transform: scale(0.92); }
-
-        .report-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #f0e4c8;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .report-item .info {
-            flex: 1;
-            min-width: 150px;
-        }
-        .report-item .info strong { color: #b8860b; }
-        .report-item .actions button {
-            margin-left: 8px;
-            padding: 4px 14px;
-            border: none;
-            border-radius: 30px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        .report-item .actions .approve { background: #27ae60; color: #fff; }
-        .report-item .actions .reject { background: #e74c3c; color: #fff; }
-        .report-item .actions .approve:active,
-        .report-item .actions .reject:active { transform: scale(0.92); }
-
-        .achievement-toggle-btn {
-            width: 100%;
-            padding: 12px 0;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #3d2b1a;
-            cursor: pointer;
-            transition: all 0.2s var(--ease-smooth);
-            transform: perspective(400px) rotateX(1deg) translateZ(2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-        }
-        .achievement-toggle-btn:active {
-            transform: perspective(400px) rotateX(0deg) translateZ(-4px) scale(0.98);
-        }
-
-        .setting-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 4px;
-        }
-        .setting-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .setting-row input {
-            flex: 1;
-            min-width: 120px;
-            padding: 10px 14px;
-            border-radius: 30px;
-            border: 1px solid rgba(238,238,238,0.8);
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(4px);
-            outline: none;
-            font-size: 14px;
-            color: #3d2b1a;
-        }
-        .setting-row button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 30px;
-            background: #d4a843;
-            color: #fff;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s var(--ease-smooth);
-            font-size: 14px;
-        }
-        .setting-row button:active { transform: scale(0.94); }
-        .setting-status {
-            font-size: 13px;
-            color: #b8a68b;
-            margin-left: 4px;
-        }
-        .setting-status.done { color: #27ae60; }
     </style>
 </head>
 <body>
 
 <div id="toast" class="toast"></div>
-<button id="adminReportsBtn" class="admin-reports-btn" onclick="switchPage('reports')">🛡️ 举报</button>
 
 <div class="header">
-    <h1>
-        <span class="logo-container">
-            <img src="/static/favicon.jpg" alt="樟嘉评级">
-            <span class="brand-text">樟嘉评级</span>
-        </span>
-        <span id="authBtn" onclick="toggleAuth()">登录</span>
-    </h1>
+    <h1>⭐ 樟嘉评级 <span id="authBtn" onclick="toggleAuth()">登录</span></h1>
     <div class="search-box">
         <input id="searchInput" placeholder="搜索..." oninput="triggerSearch()">
         <button onclick="triggerSearch()">搜索</button>
@@ -655,13 +425,7 @@
     </div>
 </div>
 
-<div id="announcementContainer" class="announcement-glass">
-    <div class="announcement-content">
-        <span id="announcementText">📢 欢迎使用樟嘉评级！专注古币评级。</span>
-        <button class="announcement-close" onclick="closeAnnouncement()">✕</button>
-    </div>
-</div>
-
+<div class="announcement">📢 欢迎使用樟嘉评级！专注古币评级。</div>
 <div class="tag-bar" id="tagBar"></div>
 
 <div id="pageFeed" class="page active"><div class="grid" id="postGrid"></div></div>
@@ -669,7 +433,8 @@
 
 <div id="pageProfile" class="page">
     <div id="profileContainer"></div>
-    <div class="glass">
+    <!-- 头像上传 -->
+    <div class="glass" style="margin:16px;">
         <h3>👤 头像</h3>
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
             <div id="avatarPreview" class="avatar-circle" style="width:64px; height:64px; font-size:28px;">👤</div>
@@ -677,23 +442,26 @@
             <button class="btn-primary" onclick="uploadAvatar()">上传</button>
         </div>
     </div>
+    <!-- 认证码 -->
+    <div class="glass" style="margin:16px;">
+        <p style="font-size:13px; color:#5a4a36;">🔑 认证码</p>
+        <div style="display:flex; gap:8px;">
+            <input id="codeInput" placeholder="输入认证码" style="flex:1; margin-bottom:0;">
+            <button onclick="submitCode()" class="btn-primary">激活</button>
+        </div>
+        <div id="codeStatus" style="margin-top:8px; font-size:13px;"></div>
+    </div>
+    <div class="glass">
+        <h3>⚙️ 设置</h3>
+        <div class="settings-item"><span class="label">版本</span><span class="value">v2.1</span></div>
+        <div class="settings-item"><span class="label">退出</span><span class="value" style="color:#d4a843;cursor:pointer;" onclick="logout()">点击退出</span></div>
+    </div>
     <div class="glass">
         <h3>📱 关于我们</h3>
         <p style="margin:4px 0;">开发者</p>
         <div style="color:#007aff; font-weight:600;">微信：xzbhks3871315753</div>
         <div style="color:#007aff; font-weight:600;">微信：LZCZ19793385313</div>
         <p style="margin-top:8px; font-size:12px; color:#b8a68b;">樟嘉评级 · 古币工作室</p>
-        <p style="margin-top:6px; font-size:11px; color:#b8a68b; opacity:0.5;">V2.4.20 · 彩蛋版</p>
-    </div>
-    <div class="glass">
-        <h3>📋 隐私政策</h3>
-        <div class="privacy-links">
-            <a href="/privacy" target="_blank">📄 总隐私政策</a>
-            <a href="/privacy-realname" target="_blank">🔒 实名认证隐私政策</a>
-            <a href="/privacy-ip" target="_blank">📍 IP地址隐私政策</a>
-            <a href="/privacy-dm" target="_blank">💬 私信隐私政策</a>
-            <a href="/privacy-phone" target="_blank">📱 手机号隐私政策</a>
-        </div>
     </div>
 </div>
 
@@ -704,32 +472,20 @@
         <div class="level-exp-bar"><div class="exp-fill" id="expFill" style="width:0%;"></div></div>
         <div style="font-size:13px; color:#3d2b1a;"><span id="currentExp">0</span> / <span id="nextExp">20</span> EXP</div>
     </div>
-    <div class="glass" style="margin:16px; text-align:center;">
-        <h3 style="color:#3d2b1a;">⭐ 信誉分</h3>
-        <div style="font-size:32px; font-weight:700; color:#d4a843;" id="currentCredit">0</div>
-        <div style="font-size:13px; color:#b8a68b;">目标 G4 · 信誉典范（200分）</div>
-        <div class="level-exp-bar" style="margin-top:8px;">
-            <div class="exp-fill" id="creditFill" style="width:0%; background:#d4a843;"></div>
-        </div>
-        <div style="font-size:12px; color:#b8a68b; margin-top:4px;">
-            <span id="currentCreditLabel">0</span> / <span id="maxCredit">200</span>
-        </div>
-    </div>
-    <div class="glass">
-        <button id="achievementToggleBtn" class="achievement-toggle-btn" onclick="toggleAchievementPanel()">
-            🏅 查看成就
-        </button>
-        <div id="achievementPanel" style="display:none; margin-top:12px;">
-            <div id="achievementList"></div>
-        </div>
-    </div>
     <div class="glass">
         <h3>📋 每日任务</h3>
-        <div class="settings-item"><span>📌 每日登录</span><span>+2 EXP</span><button class="btn-primary" id="dailyBonusBtn" onclick="claimDaily()" style="padding:4px 16px; font-size:12px;">领取</button></div>
+        <div class="settings-item"><span>📌 每日登录</span><span>+2 EXP</span><button onclick="claimDaily()" class="btn-primary" style="padding:4px 16px; font-size:12px;">领取</button></div>
         <div class="settings-item"><span>📝 发布帖子</span><span>+3 EXP</span></div>
         <div class="settings-item"><span>💬 发表评论</span><span>+1 EXP</span></div>
         <div class="settings-item"><span>❤️ 帖子被赞</span><span>+2 EXP</span></div>
         <div class="settings-item"><span>🔑 认证管理员</span><span>+30 EXP</span></div>
+    </div>
+</div>
+
+<div id="pageAchievements" class="page">
+    <div class="glass" style="margin:16px;">
+        <h2>🏅 成就中心</h2>
+        <div id="achievementList"></div>
     </div>
 </div>
 
@@ -756,33 +512,16 @@
     </div>
 </div>
 
-<div id="pageReports" class="page">
-    <div class="glass" style="margin:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h2>🛡️ 管理后台</h2>
-            <button class="btn-secondary" onclick="loadReports(); loadPendingPosts();" style="font-size:13px; padding:4px 16px;">刷新</button>
-        </div>
-        <div class="admin-tabs">
-            <button class="admin-tab active" onclick="switchAdminTab('reports')">📋 举报管理</button>
-            <button class="admin-tab" onclick="switchAdminTab('pending')">⏳ 待审核</button>
-        </div>
-        <div id="adminReportsPanel">
-            <div id="reportList"><p style="color:#b8a68b;text-align:center;padding:20px;">加载中...</p></div>
-        </div>
-        <div id="adminPendingPanel" style="display:none;">
-            <div id="pendingList"><p style="color:#b8a68b;text-align:center;padding:20px;">加载中...</p></div>
-        </div>
-    </div>
-</div>
-
+<!-- 浮动发帖按钮 -->
 <button id="floatPostBtn" class="float-post-btn" onclick="openPostModal()">
-    <span style="font-size:28px; line-height:1;">+</span>
+    <span class="icon">+</span>
 </button>
 
 <div class="bottom-nav">
     <button class="active" onclick="switchPage('feed')"><span class="icon">📄</span>首页</button>
     <button onclick="switchPage('profile')"><span class="icon">👤</span>用户</button>
     <button onclick="switchPage('level')"><span class="icon">🏆</span>等级</button>
+    <button onclick="switchPage('achievements')"><span class="icon">🏅</span>成就</button>
     <button onclick="switchPage('dm')"><span class="icon">💬</span>私信</button>
 </div>
 
@@ -807,14 +546,8 @@
 <div class="modal" id="postModal">
     <div class="modal-box">
         <h2>📝 发布帖子</h2>
-        <select id="postType" onchange="toggleGradeCodeFormat()" style="margin-bottom:12px;">
-            <option value="grade">📜 评级帖</option>
-            <option value="report">📋 综合报</option>
-        </select>
         <input id="postTitle" placeholder="标题">
         <textarea id="postContent" placeholder="内容"></textarea>
-        <input id="postGradeCode" placeholder="评级码（选填）" maxlength="30" style="margin-bottom:12px;" oninput="updateGradeCodeLength()">
-        <div id="gradeCodeHint" style="font-size:12px; color:#b8a68b; margin-bottom:12px;">纯数字，8-12位</div>
         <select id="postTag">
             <option value="">选择分类</option>
             <option value="先秦">先秦</option><option value="秦汉">秦汉</option><option value="三国两晋南北朝">三国两晋南北朝</option>
@@ -829,8 +562,8 @@
         </div>
     </div>
 </div>
+
 <script>
-// ===================== 完整 JavaScript =====================
 let currentUser = null;
 let currentPage = 'feed';
 let authMode = 'login';
@@ -838,7 +571,6 @@ let slideTimer = null;
 let currentPostId = null;
 let searchTab = 'posts';
 let currentDMUser = null;
-let currentAdminTab = 'reports';
 
 function toast(msg) {
     const t = document.getElementById('toast');
@@ -863,68 +595,7 @@ function escapeHtml(t) {
     return d.innerHTML;
 }
 
-function closeAnnouncement() {
-    document.getElementById('announcementContainer').classList.add('hidden');
-    localStorage.setItem('announcementClosed', 'true');
-}
-
-function toggleGradeCodeFormat() {
-    const type = document.getElementById('postType').value;
-    const input = document.getElementById('postGradeCode');
-    const hint = document.getElementById('gradeCodeHint');
-    if (type === 'report') {
-        input.placeholder = '格式：部门代码-第几报-日期（如 451226-00001-20260825）';
-        input.maxLength = 30;
-        input.pattern = '\\d{6}-\\d+-\\d{8}';
-        hint.textContent = '示例：451226-00001-20260825 （第几报可5~8位）';
-    } else {
-        input.placeholder = '评级码（选填，纯数字）';
-        input.maxLength = 12;
-        input.pattern = '\\d{8,12}';
-        hint.textContent = '纯数字，8-12位';
-    }
-    input.value = '';
-    updateGradeCodeLength();
-}
-
-function updateGradeCodeLength() {
-    const input = document.getElementById('postGradeCode');
-    const hint = document.getElementById('gradeCodeHint');
-    if (!input || !hint) return;
-    const len = input.value.length;
-    const max = parseInt(input.maxLength) || 30;
-    let baseText = hint.textContent.replace(/（当前.*）/g, '').trim();
-    hint.textContent = baseText + `（当前 ${len}/${max} 位）`;
-}
-
-function toggleAchievementPanel() {
-    const panel = document.getElementById('achievementPanel');
-    const btn = document.getElementById('achievementToggleBtn');
-    if (panel.style.display === 'none') {
-        panel.style.display = 'block';
-        btn.textContent = '🏅 收起成就';
-        loadAchievements();
-    } else {
-        panel.style.display = 'none';
-        btn.textContent = '🏅 查看成就';
-    }
-}
-
-function switchAdminTab(tab) {
-    currentAdminTab = tab;
-    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.admin-tab[onclick="switchAdminTab('${tab}')"]`).classList.add('active');
-    if (tab === 'reports') {
-        document.getElementById('adminReportsPanel').style.display = 'block';
-        document.getElementById('adminPendingPanel').style.display = 'none';
-        loadReports();
-    } else {
-        document.getElementById('adminReportsPanel').style.display = 'none';
-        document.getElementById('adminPendingPanel').style.display = 'block';
-        loadPendingPosts();
-    }
-}
-
+// ========== 头像上传 ==========
 async function uploadAvatar() {
     const input = document.getElementById('avatarInput');
     if (!input.files || !input.files[0]) {
@@ -934,11 +605,15 @@ async function uploadAvatar() {
     const formData = new FormData();
     formData.append('avatar', input.files[0]);
     try {
-        const res = await fetch('/api/user/avatar', { method: 'POST', body: formData });
+        const res = await fetch('/api/user/avatar', {
+            method: 'POST',
+            body: formData
+        });
         const data = await res.json();
         if (res.ok) {
             toast('头像上传成功');
-            document.getElementById('avatarPreview').innerHTML = `<img src="${data.avatar}">`;
+            const preview = document.getElementById('avatarPreview');
+            preview.innerHTML = `<img src="${data.avatar}">`;
             loadUser();
             loadProfile();
         } else {
@@ -949,100 +624,7 @@ async function uploadAvatar() {
     }
 }
 
-function editBio() {
-    const bioDisplay = document.getElementById('bioDisplay');
-    if (!bioDisplay) return;
-    const currentBio = bioDisplay.textContent.trim();
-    const newBio = prompt('编辑个人简介：', currentBio);
-    if (newBio !== null) {
-        fetch('/api/user/bio', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bio: newBio.trim() })
-        }).then(res => res.json()).then(data => {
-            if (data.status === 'ok') {
-                toast('简介更新成功');
-                loadUser();
-                loadProfile();
-            } else {
-                toast(data.error || '更新失败');
-            }
-        }).catch(() => toast('请求失败'));
-    }
-}
-
-async function getLocation() {
-    try {
-        const res = await api('/api/user/location', { method: 'POST' });
-        toast('IP归属地已更新');
-        loadUser();
-        loadProfile();
-    } catch (e) {
-        toast('获取IP失败: ' + e.message);
-    }
-}
-
-async function bindEmail() {
-    const email = document.getElementById('emailInput').value.trim();
-    if (!email) { toast('请输入邮箱'); return; }
-    try {
-        const res = await api('/api/user/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        });
-        toast(res.message);
-        document.getElementById('emailStatus').textContent = '✅ 已绑定：' + email;
-        document.getElementById('emailStatus').className = 'setting-status done';
-        loadUser();
-        loadProfile();
-    } catch (e) {
-        toast(e.message);
-    }
-}
-
-async function bindPhone() {
-    const phone = document.getElementById('phoneInput').value.trim();
-    if (!phone) { toast('请输入手机号'); return; }
-    if (!/^1[3-9]\d{9}$/.test(phone)) { toast('手机号格式不正确'); return; }
-    try {
-        const res = await api('/api/user/phone', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone })
-        });
-        toast(res.message);
-        document.getElementById('phoneStatus').textContent = '✅ 已绑定：' + phone;
-        document.getElementById('phoneStatus').className = 'setting-status done';
-        loadUser();
-        loadProfile();
-    } catch (e) {
-        toast(e.message);
-    }
-}
-
-async function bindRealname() {
-    const realName = document.getElementById('realNameInput').value.trim();
-    const idNumber = document.getElementById('idNumberInput').value.trim();
-    if (!realName || !idNumber) { toast('请填写姓名和身份证号'); return; }
-    try {
-        const res = await api('/api/user/realname', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ real_name: realName, id_number: idNumber })
-        });
-        toast(res.message);
-        document.getElementById('realnameStatus').textContent = '✅ 已认证（' + (res.age_group === 'adult' ? '成年' : '未成年') + '）';
-        document.getElementById('realnameStatus').className = 'setting-status done';
-        document.getElementById('realNameInput').value = '';
-        document.getElementById('idNumberInput').value = '';
-        loadUser();
-        loadProfile();
-    } catch (e) {
-        toast(e.message);
-    }
-}
-
+// ========== 用户认证 ==========
 async function loadUser() {
     try {
         const data = await api('/api/me');
@@ -1056,31 +638,9 @@ async function loadUser() {
         if (data.avatar) {
             document.getElementById('avatarPreview').innerHTML = `<img src="${data.avatar}">`;
         }
-        if (data.email) {
-            const status = document.getElementById('emailStatus');
-            if (status) { status.textContent = '✅ 已绑定：' + data.email; status.className = 'setting-status done'; }
-        }
-        if (data.phone) {
-            const status = document.getElementById('phoneStatus');
-            if (status) { status.textContent = '✅ 已绑定：' + data.phone; status.className = 'setting-status done'; }
-        }
-        if (data.is_realname) {
-            const status = document.getElementById('realnameStatus');
-            if (status) { status.textContent = '✅ 已认证（' + (data.age_group === 'adult' ? '成年' : '未成年') + '）'; status.className = 'setting-status done'; }
-        }
-        const reportsBtn = document.getElementById('adminReportsBtn');
-        if (data.admin_level >= 1) {
-            reportsBtn.style.display = 'block';
-        } else {
-            reportsBtn.style.display = 'none';
-        }
-        if (currentPage === 'reports' && data.admin_level < 1) {
-            switchPage('feed');
-        }
     } catch (e) {
         currentUser = null;
         document.getElementById('authBtn').textContent = '登录';
-        document.getElementById('adminReportsBtn').style.display = 'none';
     }
 }
 
@@ -1118,7 +678,6 @@ async function logout() {
     toast('已退出');
     loadPosts();
     loadProfile();
-    document.getElementById('adminReportsBtn').style.display = 'none';
 }
 
 function toggleAuth() {
@@ -1147,6 +706,7 @@ function toggleAuthMode() {
     }
 }
 
+// ========== 帖子 & 搜索 ==========
 async function loadPosts() {
     const search = document.getElementById('searchInput').value;
     let tag = '';
@@ -1202,27 +762,9 @@ function setSearchTab(type) {
 function triggerSearch() {
     const q = document.getElementById('searchInput').value.trim();
     if (!q) { document.getElementById('searchTabs').style.display = 'none'; loadPosts(); return; }
-
-    if (/^\d+$/.test(q)) {
-        fetchGradeByCode(q);
-        return;
-    }
-
     document.getElementById('searchTabs').style.display = 'flex';
     if (searchTab === 'posts') loadPosts();
     else searchUsers(q);
-}
-async function fetchGradeByCode(code) {
-    try {
-        const data = await api('/api/grade/' + code);
-        if (data && data.id) {
-            openDetail(data.id);
-        } else {
-            toast('未找到该评级码');
-        }
-    } catch (e) {
-        toast('未找到该评级码');
-    }
 }
 async function searchUsers(q) {
     try {
@@ -1237,16 +779,16 @@ async function searchUsers(q) {
             return `<div class="search-result-item" onclick="viewUserProfile(${u.id})" style="cursor:pointer;">
                 <span>${escapeHtml(u.username)}</span>
                 <span class="${gold}" style="font-size:12px;">⭐ ${u.credit_level}</span>
-                <span style="font-size:10px;color:#b8a68b;">${u.display_id || ''}</span>
             </div>`;
         }).join('');
     } catch (e) { toast('搜索用户失败'); }
 }
 async function viewUserProfile(userId) {
-    window._pendingProfileUserId = userId;
     switchPage('profile');
+    await loadUserProfile(userId);
 }
 
+// ========== 详情 ==========
 async function openDetail(id) {
     try {
         const post = await api('/api/posts/' + id);
@@ -1291,11 +833,10 @@ async function openDetail(id) {
             <p style="color:#b8a68b;font-size:13px;"><span class="${gold}">${escapeHtml(post.username)}</span> · ${tagDisplay}</p>
             ${imagesHtml}
             <p style="margin:12px 0; color:#3d2b1a;">${escapeHtml(post.content||'')}</p>
-            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                <button class="btn-primary" id="likeBtn-${post.id}" onclick="toggleLike(${post.id})" style="padding:6px 16px;">${post.liked ? '❤️' : '🤍'} <span id="likeCount">${post.like_count}</span></button>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <button class="btn-primary" onclick="toggleLike(${post.id})" style="padding:6px 16px;">${post.liked ? '❤️' : '🤍'} <span id="likeCount">${post.like_count}</span></button>
                 <span style="color:#3d2b1a;">💬 ${post.comment_count}</span>
                 ${isAdmin ? `<button onclick="deletePost(${post.id})" style="background:none;border:none;color:#d4a843;cursor:pointer;">🗑️ 删除</button>` : ''}
-                ${currentUser && currentUser.id !== post.user_id ? `<button onclick="submitReport(${post.id}, 'post')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:13px;">🚨 举报</button>` : ''}
             </div>
             <div style="margin-top:16px;">
                 <h4 style="border-bottom:2px solid #d4a843;padding-bottom:6px; color:#3d2b1a;">💬 全部评论</h4>
@@ -1326,27 +867,20 @@ function slideTo(idx) {
     dots.forEach((d,i) => d.classList.toggle('active', i===idx));
 }
 
-// ========== 修复后的点赞函数 ==========
+// ========== 点赞 / 评论 / 删除 ==========
 async function toggleLike(id) {
     if (!currentUser) { toast('请先登录'); return; }
     try {
         const res = await api('/api/posts/' + id + '/like', { method: 'POST' });
-        const btn = document.getElementById('likeBtn-' + id);
-        if (btn) {
-            const countSpan = btn.querySelector('#likeCount') || document.getElementById('likeCount');
-            const currentCount = parseInt(countSpan.textContent) || 0;
-            if (res.status === 'liked') {
-                btn.innerHTML = '❤️ <span id="likeCount">' + (currentCount + 1) + '</span>';
-            } else {
-                btn.innerHTML = '🤍 <span id="likeCount">' + (currentCount - 1) + '</span>';
-            }
+        const btn = document.querySelector('.like-btn');
+        const count = document.getElementById('likeCount');
+        if (res.status === 'liked') {
+            btn.innerHTML = '❤️ <span id="likeCount">' + (parseInt(count.textContent)+1) + '</span>';
         } else {
-            // 兜底：刷新详情页
-            if (currentPostId) openDetail(currentPostId);
+            btn.innerHTML = '🤍 <span id="likeCount">' + (parseInt(count.textContent)-1) + '</span>';
         }
-    } catch (e) { toast('点赞失败: ' + e.message); }
+    } catch (e) { toast('点赞失败'); }
 }
-
 async function submitComment() {
     if (!currentUser) { toast('请先登录'); return; }
     const input = document.getElementById('commentInput');
@@ -1382,20 +916,14 @@ async function deleteComment(commentId) {
     } catch (e) { toast('删除失败'); }
 }
 
+// ========== 用户主页 ==========
 async function loadProfile() {
     if (!currentUser) {
         document.getElementById('profileContainer').innerHTML = '<div class="glass"><p style="color:#3d2b1a;">请先登录</p></div>';
         return;
     }
-    if (window._pendingProfileUserId) {
-        const uid = window._pendingProfileUserId;
-        window._pendingProfileUserId = null;
-        await loadUserProfile(uid);
-        return;
-    }
     await loadUserProfile(currentUser.id);
 }
-
 async function loadUserProfile(userId) {
     try {
         const user = await api('/api/user/' + userId);
@@ -1407,102 +935,10 @@ async function loadUserProfile(userId) {
         const isSelf = currentUser && currentUser.id === user.id;
         const dmButton = !isSelf ? `<button class="btn-primary" onclick="openDMChat(${user.id})">💬 私信</button>` : '';
         const avatarHtml = user.avatar ? `<img src="${user.avatar}">` : escapeHtml(user.username[0].toUpperCase());
-        const showLocationBtn = !user.location || user.location === '未知地区';
-
-        const maskEmail = (email) => {
-            if (!email) return '未绑定';
-            const [local, domain] = email.split('@');
-            if (local.length <= 2) return local + '@' + domain;
-            return local[0] + '***' + local[local.length-1] + '@' + domain;
-        };
-        const maskPhone = (phone) => {
-            if (!phone) return '未绑定';
-            return phone.slice(0,3) + '****' + phone.slice(-4);
-        };
-        const maskRealName = (name) => {
-            if (!name) return '未认证';
-            if (name.length <= 2) return name[0] + '*';
-            return name[0] + '**';
-        };
-
-        const emailStatus = user.email ? '✅ 已绑定' : '❌ 未绑定';
-        const phoneStatus = user.phone ? '✅ 已绑定' : '❌ 未绑定';
-        const realnameStatus = user.is_realname ? '✅ 已认证' : '❌ 未认证';
-        const achievementCount = (user.earned_achievements || []).length;
-
-        const displayEmail = user.email ? maskEmail(user.email) : '未绑定';
-        const displayPhone = user.phone ? maskPhone(user.phone) : '未绑定';
-        const displayRealName = user.real_name ? maskRealName(user.real_name) : '未认证';
-
-        const authForms = isSelf ? `
-            <div id="authForms" style="display:none; margin-top:12px; border-top:1px solid rgba(0,0,0,0.06); padding-top:12px;">
-                <div style="margin-bottom:12px;">
-                    <div style="font-weight:600; color:#3d2b1a;">📧 邮箱</div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
-                        <input id="emailInput" placeholder="输入邮箱" type="email" style="flex:1; min-width:120px;">
-                        <button class="btn-primary" onclick="bindEmail()" style="padding:6px 16px;">绑定</button>
-                    </div>
-                    <div id="emailStatus" class="setting-status">${emailStatus}</div>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-weight:600; color:#3d2b1a;">📱 手机号</div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
-                        <input id="phoneInput" placeholder="输入手机号" type="tel" maxlength="11" style="flex:1; min-width:120px;">
-                        <button class="btn-primary" onclick="bindPhone()" style="padding:6px 16px;">绑定</button>
-                    </div>
-                    <div id="phoneStatus" class="setting-status">${phoneStatus}</div>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <div style="font-weight:600; color:#3d2b1a;">🔒 实名认证</div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
-                        <input id="realNameInput" placeholder="真实姓名" style="flex:1; min-width:80px;">
-                        <input id="idNumberInput" placeholder="身份证号" maxlength="18" style="flex:1.5; min-width:150px;">
-                        <button class="btn-primary" onclick="bindRealname()" style="padding:6px 16px;">认证</button>
-                    </div>
-                    <div id="realnameStatus" class="setting-status">${realnameStatus}</div>
-                </div>
-                <div>
-                    <div style="font-weight:600; color:#3d2b1a;">🔑 成就认证码</div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
-                        <input id="codeInput" placeholder="输入认证码" style="flex:1;">
-                        <button class="btn-primary" onclick="submitCode()" style="padding:6px 16px;">激活</button>
-                    </div>
-                    <div id="codeStatus" style="margin-top:4px; font-size:13px;"></div>
-                </div>
-            </div>
-        ` : '';
-
-        let showSensitive = false;
-        const toggleSensitive = () => {
-            showSensitive = !showSensitive;
-            const emailSpan = document.getElementById('sensitiveEmail');
-            const phoneSpan = document.getElementById('sensitivePhone');
-            const nameSpan = document.getElementById('sensitiveName');
-            if (emailSpan) emailSpan.textContent = showSensitive ? (user.email || '未绑定') : (user.email ? maskEmail(user.email) : '未绑定');
-            if (phoneSpan) phoneSpan.textContent = showSensitive ? (user.phone || '未绑定') : (user.phone ? maskPhone(user.phone) : '未绑定');
-            if (nameSpan) nameSpan.textContent = showSensitive ? (user.real_name || '未认证') : (user.real_name ? maskRealName(user.real_name) : '未认证');
-            document.getElementById('toggleSensitiveBtn').textContent = showSensitive ? '🙈 隐藏' : '👀 显示';
-        };
-        window.toggleSensitive = toggleSensitive;
-
-        const toggleAuthPanel = () => {
-            const panel = document.getElementById('authPanel');
-            const toggle = document.getElementById('authPanelToggle');
-            if (panel.style.display === 'none') {
-                panel.style.display = 'block';
-                toggle.textContent = '▲ 收起';
-            } else {
-                panel.style.display = 'none';
-                toggle.textContent = '▼ 展开';
-            }
-        };
-        window.toggleAuthPanel = toggleAuthPanel;
-
         document.getElementById('profileContainer').innerHTML = `
             <div class="glass" style="text-align:center;">
                 <div class="avatar-circle">${avatarHtml}</div>
                 <div style="font-size:22px; font-weight:600; color:#3d2b1a; margin-top:4px;">${escapeHtml(user.username)}</div>
-                <div style="font-size:13px; color:#b8a68b;">ID: ${escapeHtml(user.display_id || '未生成')}</div>
                 <div style="display:flex; justify-content:center; gap:12px; margin-top:4px; flex-wrap:wrap;">
                     <span class="${goldClass}" style="padding:2px 12px; border-radius:30px; font-size:12px;">⭐ ${user.credit_level}</span>
                     <span style="padding:2px 12px; border-radius:30px; font-size:12px; background:rgba(255,255,255,0.2); color:#3d2b1a;">📈 Lv.${user.growth_level}</span>
@@ -1513,50 +949,21 @@ async function loadUserProfile(userId) {
                     <span>📝 ${user.post_count}</span>
                     <span>❤️ ${user.like_count}</span>
                 </div>
-                <div style="margin-top:8px; padding:8px; background:rgba(255,255,255,0.1); border-radius:16px; font-size:14px; color:#3d2b1a;" id="bioDisplay">
+                <div style="margin-top:8px; padding:8px; background:rgba(255,255,255,0.1); border-radius:16px; font-size:14px; color:#3d2b1a;">
                     ${escapeHtml(user.bio || '这个人很懒，什么都没写。')}
                 </div>
-                <div style="margin-top:8px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
-                    <button class="btn-secondary" onclick="editBio()" style="font-size:13px; padding:4px 16px;">✏️ 编辑简介</button>
-                    ${showLocationBtn ? `<button class="btn-secondary" onclick="getLocation()" style="font-size:13px; padding:4px 16px;">📍 获取IP</button>` : ''}
-                </div>
-                <div style="margin-top:8px; font-size:12px; color:#5a4a36;">
-                    📍 ${escapeHtml(user.location && user.location !== '未知地区' ? user.location : '未获取')}
-                </div>
+                <div style="margin-top:8px; font-size:12px; color:#5a4a36;">📍 ${escapeHtml(user.location || '未知地区')}</div>
                 <div style="margin-top:12px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">${displayTitles}</div>
                 <div style="margin-top:16px;">
                     ${dmButton}
                     ${!isSelf && currentUser ? `<button class="btn-secondary" onclick="submitReport(${user.id}, 'user')" style="margin-left:8px;">🚨 举报</button>` : ''}
                 </div>
             </div>
-
-            ${isSelf ? `
-            <div class="glass" style="margin:16px 0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleAuthPanel()">
-                    <h3 style="color:#3d2b1a;">🔐 认证中心</h3>
-                    <span id="authPanelToggle">▼ 展开</span>
-                </div>
-                <div id="authPanel" style="display:none; margin-top:8px;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:14px; color:#3d2b1a;">
-                        <div><span style="color:#5a4a36;">邮箱：</span><span id="sensitiveEmail">${displayEmail}</span></div>
-                        <div><span style="color:#5a4a36;">手机：</span><span id="sensitivePhone">${displayPhone}</span></div>
-                        <div><span style="color:#5a4a36;">实名：</span><span id="sensitiveName">${displayRealName}</span></div>
-                        <div><span style="color:#5a4a36;">成就：</span>${achievementCount} 个</div>
-                    </div>
-                    <div style="display:flex; gap:12px; margin-top:8px; flex-wrap:wrap;">
-                        <button class="btn-secondary" id="toggleSensitiveBtn" onclick="toggleSensitive()" style="font-size:13px; padding:4px 16px;">👀 显示</button>
-                        <button class="btn-secondary" onclick="document.getElementById('authForms').style.display=document.getElementById('authForms').style.display==='none'?'block':'none';" style="font-size:13px; padding:4px 16px;">✏️ 修改认证</button>
-                    </div>
-                    ${authForms}
-                </div>
-            </div>
-            ` : ''}
         `;
-    } catch (e) {
-        toast('加载用户信息失败');
-    }
+    } catch (e) { toast('加载用户信息失败'); }
 }
 
+// ========== 认证码 ==========
 async function submitCode() {
     const code = document.getElementById('codeInput').value.trim();
     if (!code) { toast('请输入认证码'); return; }
@@ -1576,6 +983,7 @@ async function submitCode() {
     }
 }
 
+// ========== 举报 ==========
 async function submitReport(targetId, targetType) {
     if (!currentUser) { toast('请先登录'); return; }
     const reason = prompt('请输入举报原因：');
@@ -1590,6 +998,7 @@ async function submitReport(targetId, targetType) {
     } catch (e) { toast('举报失败: ' + e.message); }
 }
 
+// ========== 发帖 ==========
 function openPostModal() {
     if (!currentUser) { toast('请先登录'); return; }
     if (currentUser.admin_level < 1) { toast('只有管理员可以发帖'); return; }
@@ -1599,47 +1008,23 @@ function closePostModal() {
     document.getElementById('postModal').classList.remove('active');
     document.getElementById('postTitle').value = '';
     document.getElementById('postContent').value = '';
-    document.getElementById('postGradeCode').value = '';
     document.getElementById('postImages').value = '';
     document.getElementById('postTag').value = '';
-    document.getElementById('postType').value = 'grade';
-    document.getElementById('gradeCodeHint').textContent = '纯数字，8-12位';
 }
 async function submitPost() {
     const btn = document.getElementById('submitPostBtn');
     if (btn.disabled) return;
     btn.disabled = true;
-    const type = document.getElementById('postType').value;
     const title = document.getElementById('postTitle').value.trim();
     const content = document.getElementById('postContent').value.trim();
     const tag = document.getElementById('postTag').value;
-    const gradeCode = document.getElementById('postGradeCode').value.trim();
-
     if (!title || !tag) { toast('标题和分类必填'); btn.disabled=false; return; }
-
-    if (gradeCode) {
-        if (type === 'grade') {
-            if (!/^\d{8,12}$/.test(gradeCode)) {
-                toast('评级码需为8-12位纯数字');
-                btn.disabled=false; return;
-            }
-        } else {
-            if (!/^\d{6}-\d{5,8}-\d{8}$/.test(gradeCode)) {
-                toast('综合报格式：部门代码(6位)-第几报(5~8位)-日期(8位)');
-                btn.disabled=false; return;
-            }
-        }
-    }
-
     const fd = new FormData();
-    fd.append('type', type);
     fd.append('title', title);
     fd.append('content', content);
     fd.append('tag', tag);
-    if (gradeCode) fd.append('grade_code', gradeCode);
     const files = document.getElementById('postImages').files;
     for (let f of files) fd.append('images', f);
-
     try {
         await fetch('/api/posts', { method: 'POST', body: fd });
         closePostModal();
@@ -1649,6 +1034,7 @@ async function submitPost() {
     btn.disabled = false;
 }
 
+// ========== 等级 ==========
 async function loadLevelCenter() {
     if (!currentUser) return;
     try {
@@ -1657,36 +1043,20 @@ async function loadLevelCenter() {
         document.getElementById('levelName').textContent = data.name;
         document.getElementById('currentExp').textContent = data.exp;
         document.getElementById('nextExp').textContent = data.next_level_exp;
-        const expPercent = Math.min((data.exp / data.next_level_exp) * 100, 100);
-        document.getElementById('expFill').style.width = expPercent + '%';
-        const credit = data.credit_score || 0;
-        const creditMax = 200;
-        const creditPercent = Math.min((credit / creditMax) * 100, 100);
-        document.getElementById('creditFill').style.width = creditPercent + '%';
-        document.getElementById('currentCredit').textContent = credit;
-        document.getElementById('currentCreditLabel').textContent = credit;
-        document.getElementById('maxCredit').textContent = creditMax;
+        const percent = Math.min((data.exp / data.next_level_exp) * 100, 100);
+        document.getElementById('expFill').style.width = percent + '%';
     } catch (e) {}
 }
-
-let dailyBonusCooldown = false;
 async function claimDaily() {
-    if (dailyBonusCooldown) { toast('请勿重复点击'); return; }
     if (!currentUser) { toast('请先登录'); return; }
-    dailyBonusCooldown = true;
-    const btn = document.getElementById('dailyBonusBtn');
-    btn.disabled = true;
-    btn.textContent = '领取中...';
     try {
         const res = await api('/api/daily_bonus', { method: 'POST' });
         toast(res.message);
         loadLevelCenter();
     } catch (e) { toast(e.message); }
-    btn.disabled = false;
-    btn.textContent = '领取';
-    setTimeout(() => { dailyBonusCooldown = false; }, 3000);
 }
 
+// ========== 成就 ==========
 async function loadAchievements() {
     if (!currentUser) return;
     try {
@@ -1709,119 +1079,7 @@ async function loadAchievements() {
     } catch (e) { toast('加载成就失败'); }
 }
 
-async function loadReports() {
-    if (!currentUser || currentUser.admin_level < 1) {
-        document.getElementById('reportList').innerHTML = '<p style="color:#b8a68b;text-align:center;padding:20px;">权限不足</p>';
-        return;
-    }
-    try {
-        const reports = await api('/api/admin/reports');
-        const container = document.getElementById('reportList');
-        if (!reports.length) {
-            container.innerHTML = '<p style="color:#b8a68b;text-align:center;padding:20px;">暂无待处理举报</p>';
-            return;
-        }
-        container.innerHTML = reports.map(r => `
-            <div class="report-item">
-                <div class="info">
-                    <div><strong>举报人：</strong>${escapeHtml(r.reporter_name)}</div>
-                    <div><strong>类型：</strong>${r.target_type} <span style="color:#999;">ID: ${r.target_id}</span></div>
-                    <div style="font-size:13px; color:#5a4a36;">${escapeHtml(r.reason)}</div>
-                    <div style="font-size:11px; color:#b8a68b;">${new Date(r.created_at).toLocaleString()}</div>
-                </div>
-                <div class="actions">
-                    <button class="approve" onclick="handleReport(${r.id}, 'approve')">✅ 通过</button>
-                    <button class="reject" onclick="handleReport(${r.id}, 'reject')">❌ 驳回</button>
-                </div>
-            </div>
-        `).join('');
-    } catch (e) {
-        document.getElementById('reportList').innerHTML = '<p style="color:#b8a68b;text-align:center;padding:20px;">加载失败</p>';
-        toast('加载举报失败');
-    }
-}
-
-async function handleReport(reportId, action) {
-    if (!currentUser || currentUser.admin_level < 1) {
-        toast('权限不足');
-        return;
-    }
-    try {
-        const res = await api('/api/admin/reports/' + reportId, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action })
-        });
-        if (res.status === 'ok') {
-            toast('处理成功');
-            loadReports();
-        } else {
-            toast(res.error || '操作失败');
-        }
-    } catch (e) {
-        toast('操作失败: ' + e.message);
-    }
-}
-
-async function loadPendingPosts() {
-    if (!currentUser || currentUser.admin_level < 1) {
-        document.getElementById('pendingList').innerHTML = '<p style="color:#b8a68b;text-align:center;padding:20px;">权限不足</p>';
-        return;
-    }
-    try {
-        const posts = await api('/api/admin/pending_posts');
-        const container = document.getElementById('pendingList');
-        if (!posts.length) {
-            container.innerHTML = '<p style="color:#b8a68b;text-align:center;padding:20px;">暂无待审核帖子</p>';
-            return;
-        }
-        container.innerHTML = posts.map(p => `
-            <div class="report-item">
-                <div class="info">
-                    <div><strong>${escapeHtml(p.title)}</strong></div>
-                    <div style="font-size:13px; color:#5a4a36;">${escapeHtml(p.content || '无内容')}</div>
-                    <div style="font-size:11px; color:#b8a68b;">作者：${escapeHtml(p.username)} · ${new Date(p.created_at).toLocaleString()}</div>
-                    ${p.grade_code ? `<div style="font-size:11px; color:#b8a68b;">评级码：${escapeHtml(p.grade_code)}</div>` : ''}
-                </div>
-                <div class="actions">
-                    <button class="approve" onclick="approvePost(${p.id})">✅ 通过</button>
-                    <button class="reject" onclick="rejectPost(${p.id})">❌ 驳回</button>
-                </div>
-            </div>
-        `).join('');
-    } catch (e) {
-        document.getElementById('pendingList').innerHTML = '<p style="color:#b8a68b;text-align:center;padding:20px;">加载失败</p>';
-        toast('加载待审核列表失败');
-    }
-}
-
-async function approvePost(postId) {
-    if (!currentUser || currentUser.admin_level < 1) { toast('权限不足'); return; }
-    try {
-        await api('/api/admin/approve_post/' + postId, { method: 'POST' });
-        toast('已通过审核');
-        loadPendingPosts();
-    } catch (e) {
-        toast('操作失败: ' + e.message);
-    }
-}
-
-async function rejectPost(postId) {
-    if (!currentUser || currentUser.admin_level < 1) { toast('权限不足'); return; }
-    const reason = prompt('请输入驳回原因（可选）：');
-    try {
-        await api('/api/admin/reject_post/' + postId, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reason: reason || '无' })
-        });
-        toast('已驳回');
-        loadPendingPosts();
-    } catch (e) {
-        toast('操作失败: ' + e.message);
-    }
-}
-
+// ========== 私信 ==========
 async function loadConversations() {
     if (!currentUser) return;
     try {
@@ -1898,6 +1156,7 @@ async function sendDM() {
     } catch(e) { toast('发送失败: ' + e.message); }
 }
 
+// ========== 页面切换 ==========
 function switchPage(page) {
     currentPage = page;
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1916,27 +1175,20 @@ function switchPage(page) {
         } else if (page === 'level') {
             document.getElementById('pageLevel').classList.add('active');
             loadLevelCenter();
+        } else if (page === 'achievements') {
+            document.getElementById('pageAchievements').classList.add('active');
+            loadAchievements();
         } else if (page === 'dm') {
             document.getElementById('pageDM').classList.add('active');
             loadConversations();
         } else if (page === 'dmchat') {
             document.getElementById('pageDMChat').classList.add('active');
-        } else if (page === 'reports') {
-            document.getElementById('pageReports').classList.add('active');
-            loadReports();
-            loadPendingPosts();
         }
     }
     document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
-    const map = { feed:0, profile:1, level:2, dm:3 };
+    const map = { feed:0, profile:1, level:2, achievements:3, dm:4 };
     if (map[page] !== undefined) document.querySelectorAll('.bottom-nav button')[map[page]]?.classList.add('active');
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem('announcementClosed') === 'true') {
-        document.getElementById('announcementContainer').classList.add('hidden');
-    }
-});
 
 loadUser();
 loadPosts();
@@ -1944,4 +1196,3 @@ loadTags();
 </script>
 </body>
 </html>
-

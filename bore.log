@@ -1,0 +1,7 @@
+nohup: ignoring input
+[2m2026-08-21T22:09:02.936404Z[0m [32m INFO[0m [2mbore_cli::client[0m[2m:[0m connected to server [3mremote_port[0m[2m=[0m51054
+[2m2026-08-21T22:09:02.936495Z[0m [32m INFO[0m [2mbore_cli::client[0m[2m:[0m listening at bore.pub:51054
+Error: frame error, invalid byte length
+
+Caused by:
+    Software caused connection abort (os error 103)
