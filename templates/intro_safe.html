@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LanSafe OS · 信息长城</title>
+<meta name="theme-color" content="#ffffff">
+<style>
+:root {
+    --gold: #c9a227;
+    --gold-light: #e8c766;
+    --gold-pale: #f7eed3;
+    --cream: #fafaf8;
+    --dark: #1a1a1a;
+    --text-dim: #6b6357;
+    --steel: #5a5a5a;
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--cream);
+    color: var(--dark);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.8;
+    overflow-x: hidden;
+}
+.bg-glow {
+    position: fixed; width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(90,90,90,0.08) 0%, transparent 70%);
+    top: -200px; left: -200px; z-index: 0; pointer-events: none;
+    animation: drift 14s ease-in-out infinite;
+}
+@keyframes drift { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px,60px); } }
+.container { max-width: 800px; margin: 0 auto; padding: 80px 24px; position: relative; z-index: 1; }
+.hero { text-align: center; margin-bottom: 80px; }
+.hero-badge {
+    display: inline-block; padding: 6px 18px; border-radius: 30px;
+    background: #f0f0ee; color: var(--steel);
+    font-size: 0.75rem; letter-spacing: 0.3em; font-weight: 600;
+    margin-bottom: 24px;
+}
+.hero-title {
+    font-size: clamp(2.2rem, 7vw, 4rem); font-weight: 900;
+    letter-spacing: 0.05em;
+    color: var(--steel);
+    opacity: 0; animation: fadeUp 0.8s var(--ease-bounce) 0.2s forwards;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.hero-sub {
+    color: var(--text-dim); letter-spacing: 0.4em; margin-top: 16px;
+    font-size: 0.9rem; font-weight: 300;
+    opacity: 0; animation: fadeUp 0.8s var(--ease-out) 0.5s forwards;
+}
+.card {
+    background: #fff; border-radius: 20px; padding: 36px 32px;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+    opacity: 0; transform: translateY(30px);
+    transition: all 0.7s var(--ease-out);
+}
+.card.visible { opacity: 1; transform: translateY(0); }
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    border-color: var(--steel);
+}
+.card h3 {
+    color: var(--steel); font-size: 1.2rem; margin-bottom: 14px;
+    letter-spacing: 0.05em; display: flex; align-items: center; gap: 10px;
+}
+.card h3::before {
+    content: ''; width: 4px; height: 20px; border-radius: 2px;
+    background: linear-gradient(180deg, #8a8a8a, var(--steel));
+}
+.card p { color: var(--text-dim); font-size: 0.95rem; }
+.card ul { list-style: none; margin-top: 12px; }
+.card li {
+    padding: 10px 0; padding-left: 24px; position: relative;
+    color: var(--text-dim); font-size: 0.92rem;
+    border-bottom: 1px dashed #f0f0ee;
+}
+.card li:last-child { border-bottom: none; }
+.card li::before {
+    content: '🛡'; position: absolute; left: 0; top: 10px;
+    font-size: 0.9rem; opacity: 0.8;
+}
+.back-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 40px; padding: 14px 32px;
+    color: var(--steel); text-decoration: none;
+    border: 2px solid var(--steel); border-radius: 50px;
+    font-weight: 600; letter-spacing: 0.1em; font-size: 0.9rem;
+    transition: all 0.3s var(--ease-bounce);
+}
+.back-btn:hover { background: var(--steel); color: #fff; transform: translateY(-3px) scale(1.03); }
+.footer { text-align: center; padding: 60px 24px 40px; color: var(--text-dim); font-size: 0.8rem; }
+.footer .version { color: var(--steel); font-family: monospace; letter-spacing: 0.1em; margin-top: 8px; font-size: 0.7rem; }
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="container">
+
+<div class="hero">
+    <div class="hero-badge">SECURITY SYSTEM</div>
+    <h1 class="hero-title">LanSafe OS</h1>
+    <p class="hero-sub">永不信任 · 始终验证</p>
+</div>
+
+<div class="card">
+    <h3>核心原则</h3>
+    <p>零信任（Zero Trust）不是一句口号，而是一套贯穿始终的架构哲学。无论请求来自内部还是外部，每一次访问都必须通过权限校验，每一个动作都必须被审计记录。</p>
+</div>
+
+<div class="card">
+    <h3>三层防御体系</h3>
+    <ul>
+        <li><b>边缘层</b>：Cloudflare WAF 托管规则 + 速率限制，拦截通用漏洞与 DDoS 洪水</li>
+        <li><b>应用层</b>：Flask 装饰器鉴权 + 登录限流 + Session 安全加固</li>
+        <li><b>审计层</b>：实时记录登录、越权、限流、可疑 UA，全链路留痕</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h3>安全底线</h3>
+    <ul>
+        <li>数据加密存储，敏感字段不落明文</li>
+        <li>权限隔离，最小权限原则</li>
+        <li>设备指纹校验，异常登录强制锁定</li>
+        <li>高危操作强制审计，不可删除</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h3>信息长城</h3>
+    <p>LanSafe OS 的使命，是让每一次恶意扫描都撞在墙上，让每一次越权尝试都留下证据。我们不追求绝对安全，但我们追求让攻击的成本高到不划算。</p>
+</div>
+
+<a href="/" class="back-btn">← 返回生态门户</a>
+
+</div>
+<div class="footer">
+    <div>© 2026 樟嘉评级 · LanSafe OS</div>
+    <div class="version">LanSafe 1.26.90110501.ALWNCFSAE</div>
+</div>
+<script>
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+            setTimeout(() => e.target.classList.add('visible'), i * 100);
+        }
+    });
+}, { threshold: 0.15 });
+document.querySelectorAll('.card').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

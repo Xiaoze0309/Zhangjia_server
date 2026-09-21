@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>樟嘉论坛 · Beta</title>
+<meta name="theme-color" content="#ffffff">
+<style>
+:root{--gold:#c9a227;--gold-light:#e8c766;--gold-pale:#f7eed3;--cream:#fdfbf5;--dark:#1a1a1a;--dim:#8a8278;--line:#f0ece0;--bounce:cubic-bezier(.34,1.56,.64,1);--out:cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--cream);color:var(--dark);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding-bottom:70px;overflow-x:hidden;padding-top:130px}
+
+/* Beta 提示条 */
+.beta-bar{position:fixed;top:0;left:0;right:0;height:26px;background:linear-gradient(90deg,#c9a227,#e8c766);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;z-index:2000;letter-spacing:.15em;font-weight:600}
+
+/* 顶部栏 */
+.topbar{position:fixed;top:26px;left:0;right:0;z-index:100;background:#fff;padding:10px 14px 6px;box-shadow:0 2px 12px rgba(201,162,39,.06)}
+.topbar-row{display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.brand-logo{width:28px;height:28px;border-radius:50%;border:2px solid var(--gold-pale)}
+.brand-name{font-size:15px;font-weight:800;color:var(--gold);white-space:nowrap}
+
+/* 抽拉式搜索 */
+.search-wrap{flex:1;display:flex;align-items:center;background:var(--cream);border-radius:22px;padding:3px;height:38px;overflow:hidden;transition:background .3s;cursor:pointer}
+.search-wrap:focus-within{background:var(--gold-pale)}
+.search-input{flex:1;border:none;outline:none;background:transparent;font-size:14px;color:var(--dark);padding:0 16px;opacity:0;width:0;transition:opacity .4s var(--out) .15s,padding .4s var(--out)}
+.search-wrap.expanded .search-input{opacity:1;padding:0 4px 0 16px;width:auto}
+.search-input::placeholder{color:var(--dim)}
+.search-ball{display:flex;align-items:center;justify-content:center;gap:0;min-width:32px;height:32px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#fff;font-size:14px;cursor:pointer;flex-shrink:0;overflow:hidden;transition:min-width .45s var(--bounce),gap .3s ease .15s,padding .3s ease}
+.search-wrap.expanded .search-ball{min-width:74px;gap:4px;padding:0 12px}
+.search-ball .label{font-size:12px;font-weight:700;max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .35s ease .15s,opacity .3s ease .2s}
+.search-wrap.expanded .search-ball .label{max-width:50px;opacity:1}
+.topbar-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-pale);flex-shrink:0;cursor:pointer}
+
+/* Tab */
+.tabs{display:flex;gap:22px;padding:8px 4px 0;overflow-x:auto;white-space:nowrap}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font-size:15px;color:var(--dim);font-weight:500;position:relative;padding-bottom:6px;cursor:pointer;transition:color .3s}
+.tab.active{color:var(--gold);font-weight:700}
+.tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:22px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--gold-light),var(--gold));animation:tabLine .3s var(--bounce)}
+@keyframes tabLine{from{width:0}to{width:22px}}
+
+/* 信息流 */
+.feed{padding:12px 0}
+.talk-card{background:#fff;margin:0 12px 12px;border-radius:16px;padding:16px;box-shadow:0 4px 16px rgba(201,162,39,.06);opacity:0;transform:translateY(20px);animation:cardIn .5s var(--out) forwards}
+@keyframes cardIn{to{opacity:1;transform:translateY(0)}}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.card-head img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-pale);flex-shrink:0}
+.card-head .info{flex:1;min-width:0}
+.card-head .name{font-size:14px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:6px}
+.card-head .name .badge{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--gold-pale);color:var(--gold);font-weight:600}
+.card-head .time{font-size:11px;color:var(--dim);margin-top:2px}
+.card-body{font-size:15px;line-height:1.65;color:var(--dark);margin-bottom:12px;word-break:break-word;white-space:pre-wrap}
+.card-body.collapsed{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.card-imgs{display:grid;gap:4px;margin-bottom:12px}
+.card-imgs.single{grid-template-columns:1fr;max-width:70%}
+.card-imgs.double{grid-template-columns:1fr 1fr}
+.card-imgs.multi{grid-template-columns:repeat(3,1fr)}
+.card-imgs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;transition:opacity .3s}
+.card-imgs.single img{aspect-ratio:4/3}
+.card-imgs img:active{opacity:.85;transform:none}
+.card-actions{display:flex;gap:24px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--dim)}
+.card-actions .act{display:flex;align-items:center;gap:5px;cursor:pointer;transition:color .2s;user-select:none}
+.card-actions .act:active{color:var(--gold)}
+.card-actions .act.liked{color:var(--gold);font-weight:700}
+.empty{text-align:center;color:var(--dim);padding:80px 20px;font-size:14px}
+.empty .icon{font-size:40px;margin-bottom:12px;opacity:.5}
+.fab{position:fixed;right:20px;bottom:88px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#fff;font-size:28px;border:none;box-shadow:0 8px 24px rgba(201,162,39,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .3s var(--bounce);z-index:99}
+.fab:active{transform:scale(.92)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;display:flex;justify-content:space-around;align-items:center;box-shadow:0 -2px 12px rgba(201,162,39,.06);z-index:100}
+.bottom-nav .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--dim);text-decoration:none;transition:color .3s;padding:6px 12px;border-radius:12px}
+.bottom-nav .nav-item.active{color:var(--gold);font-weight:700}
+.bottom-nav .nav-item .icon{font-size:20px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(26,26,26,.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;pointer-events:none;transition:all .3s var(--out);z-index:3000}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="beta-bar">🧪 LanOS 2 Beta 内测 · 数据随时清空</div>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <img src="/static/favicon.jpg" class="brand-logo">
+      <span class="brand-name">樟嘉论坛</span>
+    </div>
+    <div class="search-wrap" id="searchWrap">
+      <input class="search-input" id="searchInput" placeholder="搜索帖子、用户...">
+      <button class="search-ball" id="searchBall">
+        <span>🔍</span><span class="label">搜索</span>
+      </button>
+    </div>
+    <img src="/static/favicon.jpg" class="topbar-avatar" onclick="location.href='https://www.zhangjiacoins.dpdns.org'">
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="recommend">推荐</div>
+    <div class="tab" data-tab="follow">关注</div>
+    <div class="tab" data-tab="hot">热榜</div>
+    <div class="tab" data-tab="latest">最新</div>
+  </div>
+</div>
+
+<div class="feed" id="feed"></div>
+<button class="fab" onclick="location.href='https://www.zhangjiacoins.dpdns.org/#post'">+</button>
+
+<nav class="bottom-nav">
+  <a href="https://www.zhangjiacoins.dpdns.org" class="nav-item"><span class="icon">🏠</span>首页</a>
+  <a href="/beta" class="nav-item active"><span class="icon">💬</span>论坛</a>
+  <a href="https://intro.zhangjiacoins.dpdns.org" class="nav-item"><span class="icon">✨</span>生态</a>
+  <a href="https://www.zhangjiacoins.dpdns.org/#dm" class="nav-item"><span class="icon">📩</span>消息</a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/posts?section=talk';
+
+async function loadFeed(tab='recommend'){
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '<div class="empty">加载中...</div>';
+  try{
+    const r = await fetch(API + '&tab=' + tab);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const posts = await r.json();
+    feed.innerHTML = '';
+    if(!posts.length){
+      feed.innerHTML = '<div class="empty"><div class="icon">🪙</div>还没有帖子<br>来发第一条吧～</div>';
+      return;
+    }
+    posts.forEach((p, i) => feed.appendChild(renderCard(p, i)));
+  }catch(e){
+    feed.innerHTML = '<div class="empty">加载失败，请检查网络</div>';
+  }
+}
+
+function renderCard(p, i){
+  const card = document.createElement('div');
+  card.className = 'talk-card';
+  card.style.animationDelay = (i * 70) + 'ms';
+  const imgs = (p.images || []);
+  let imgClass = 'single';
+  if(imgs.length === 2) imgClass = 'double';
+  else if(imgs.length >= 3) imgClass = 'multi';
+  const imgHtml = imgs.map(src => `<img src="${src}" onclick="event.stopPropagation();previewImg('${src}')">`).join('');
+  card.innerHTML = `
+    <div class="card-head">
+      <img src="${p.avatar || '/static/favicon.jpg'}">
+      <div class="info">
+        <div class="name">${escapeHtml(p.username || '匿名')}${p.is_owner ? '<span class="badge">站长</span>' : ''}</div>
+        <div class="time">${escapeHtml(p.created_at || '')}</div>
+      </div>
+    </div>
+    <div class="card-body collapsed" onclick="this.classList.toggle('collapsed')">${escapeHtml(p.content || '')}</div>
+    ${imgs.length ? `<div class="card-imgs ${imgClass}">${imgHtml}</div>` : ''}
+    <div class="card-actions">
+      <span class="act ${p.liked?'liked':''}" onclick="toggleLike(this, ${p.id})">👍 ${p.likes||0}</span>
+      <span class="act">💬 ${p.comments||0}</span>
+      <span class="act" onclick="toast('已复制分享链接')">↗ 分享</span>
+    </div>
+  `;
+  return card;
+}
+
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
+
+function previewImg(src){
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  o.innerHTML = `<img src="${src}" style="max-width:95%;max-height:95%;object-fit:contain;">`;
+  o.onclick = () => o.remove();
+  document.body.appendChild(o);
+}
+
+async function toggleLike(el, id){
+  el.classList.toggle('liked');
+  try{ await fetch('/api/posts/' + id + '/like', {method:'POST'}); }catch(e){}
+}
+
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+const searchWrap = document.getElementById('searchWrap');
+const searchInput = document.getElementById('searchInput');
+const searchBall = document.getElementById('searchBall');
+
+searchBall.onclick = (e) => {
+  e.stopPropagation();
+  if(!searchWrap.classList.contains('expanded')){
+    searchWrap.classList.add('expanded');
+    setTimeout(() => searchInput.focus(), 350);
+  } else {
+    const q = searchInput.value.trim();
+    if(q) toast('搜索：' + q);
+    else toast('请输入关键词');
+  }
+};
+document.addEventListener('click', (e) => {
+  if(!searchWrap.contains(e.target) && searchWrap.classList.contains('expanded')){
+    searchWrap.classList.remove('expanded');
+  }
+});
+searchInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    const q = searchInput.value.trim();
+    if(q) toast('搜索：' + q);
+  }
+  if(e.key === 'Escape') searchWrap.classList.remove('expanded');
+});
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    loadFeed(t.dataset.tab);
+  };
+});
+
+loadFeed();
+</script>
+</body>
+</html>
