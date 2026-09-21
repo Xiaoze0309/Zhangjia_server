@@ -1,0 +1,80 @@
+{% extends "base_center.html" %}
+{% block title %}樟嘉评级中心 - 首页{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>樟嘉钱币评级中心</h1>
+  <p>专业古钱币评级 · 权威认证 · 全程可追溯</p>
+
+  <form class="search-box" onsubmit="handleSearch(event)">
+    <input type="text" id="searchInput" placeholder="输入证书号 / 订单号 / 手机号查询" required>
+    <button type="submit" class="btn btn-primary">查询</button>
+  </form>
+</section>
+
+<div class="container">
+  <div class="quick-entries stagger">
+    <a href="{{ url_for('center.center_apply') }}" class="quick-card">
+      <div class="quick-icon">📝</div>
+      <h3>申请评级</h3>
+      <p>填写信息并上传币图</p>
+    </a>
+    <a href="{{ url_for('center.center_apply') }}" class="quick-card">
+      <div class="quick-icon">💰</div>
+      <h3>微信支付</h3>
+      <p>扫码支付 ¥{{ '%.2f'|format(50) }}</p>
+    </a>
+    <a href="{{ url_for('center.center_index') }}#query" class="quick-card">
+      <div class="quick-icon">🔍</div>
+      <h3>查询进度</h3>
+      <p>实时跟踪评级状态</p>
+    </a>
+    <a href="{{ url_for('center.about') }}" class="quick-card">
+      <div class="quick-icon">ℹ️</div>
+      <h3>关于我们</h3>
+      <p>了解樟嘉评级</p>
+    </a>
+  </div>
+</div>
+
+<section style="padding:60px 0;">
+  <div class="container">
+    <div class="card">
+      <h2 class="card-title">评级流程</h2>
+      <p class="card-desc">四步完成专业评级</p>
+      <div class="timeline">
+        <div class="timeline-item active">
+          <div class="timeline-dot"></div>
+          <h4>1. 提交申请</h4>
+          <p>填写币种信息，上传清晰币图</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <h4>2. 微信支付</h4>
+          <p>扫码支付并上传付款凭证</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <h4>3. 专业评级</h4>
+          <p>评级师审核并出具评级结果</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <h4>4. 结果查询</h4>
+          <p>输入证书号查询评级详情</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function handleSearch(e) {
+  e.preventDefault();
+  const kw = document.getElementById('searchInput').value.trim();
+  if (kw) {
+    window.location.href = '/center/query/' + encodeURIComponent(kw);
+  }
+}
+</script>
+{% endblock %}

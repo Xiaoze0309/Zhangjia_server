@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}樟嘉评级中心{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% block navbar %}
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="{{ url_for('center.index') }}" class="navbar-brand">樟嘉评级中心</a>
+      <div class="navbar-nav">
+        <a href="{{ url_for('center.center_index') }}" class="{% if request.endpoint == 'center.center_index' %}active{% endif %}">首页</a>
+        <a href="{{ url_for('center.center_apply') }}">申请评级</a>
+        {% if current_user.is_authenticated and current_user.is_rater_user %}
+        <a href="{{ url_for('center.center_rater') }}">评级师后台</a>
+        {% endif %}
+        <a href="{{ url_for('center.about') }}">关于我们</a>
+        {% if current_user.is_authenticated %}
+        <span style="color:var(--color-text-muted);font-size:13px;">{{ current_user.username }}</span>
+        <a href="{{ url_for('center.logout') }}">退出</a>
+        {% else %}
+        <a href="{{ url_for('center.login') }}">登录</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+  {% endblock %}
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container-sm" style="margin-top:24px;">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

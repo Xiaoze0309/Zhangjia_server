@@ -1,0 +1,73 @@
+{% extends "base_center.html" %}
+{% block title %}支付 - 樟嘉评级中心{% endblock %}
+
+{% block content %}
+<section style="padding:48px 0;">
+  <div class="container-sm">
+    <div class="card">
+      <h2 class="card-title">微信支付</h2>
+      <p class="card-desc">订单号：{{ order.order_no }}</p>
+
+      <div class="pay-qr">
+        <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:24px;display:inline-block;">
+          <!-- 收款码占位 - 实际部署时替换为微信收款码图片 -->
+          <div style="width:240px;height:240px;background:var(--color-card);border:2px dashed var(--color-border);display:flex;align-items:center;justify-content:center;border-radius:12px;">
+            <span style="color:var(--color-text-muted);font-size:14px;">微信收款码</span>
+          </div>
+        </div>
+        <div class="pay-amount">¥{{ '%.2f'|format(50) }}</div>
+        <p style="color:var(--color-text-secondary);font-size:14px;margin-bottom:24px;">
+          请使用微信扫码支付，并上传付款凭证
+        </p>
+      </div>
+
+      <div style="border-top:1px solid var(--color-border);padding-top:24px;margin-top:24px;">
+        <h4 style="margin-bottom:16px;">上传付款凭证</h4>
+        <form id="proofForm" enctype="multipart/form-data">
+          <div class="upload-area" onclick="document.getElementById('proofInput').click()">
+            <div class="upload-icon">🧾</div>
+            <p>点击上传微信付款截图</p>
+          </div>
+          <input type="file" id="proofInput" name="proof" accept="image/*" style="display:none" onchange="document.getElementById('proofForm').submit()">
+        </form>
+        <div id="proofPreview" style="margin-top:16px;"></div>
+      </div>
+
+      <div style="margin-top:24px;text-align:center;">
+        <a href="{{ url_for('center.center_index') }}" class="btn btn-secondary">返回首页</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.getElementById('proofInput').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('proof', file);
+
+  try {
+    const res = await fetch('/api/center/upload_proof/{{ order.order_no }}', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      const preview = document.getElementById('proofPreview');
+      const reader = new FileReader();
+      reader.onload = ev => {
+        preview.innerHTML = '<img src="' + ev.target.result + '" style="max-width:200px;border-radius:12px;">';
+      };
+      reader.readAsDataURL(file);
+      alert('凭证上传成功，等待评级师审核！');
+    } else {
+      alert(data.message || '上传失败');
+    }
+  } catch (err) {
+    alert('网络错误，请重试');
+  }
+});
+</script>
+{% endblock %}

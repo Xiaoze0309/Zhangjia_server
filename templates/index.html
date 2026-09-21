@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LanOS 主站 - 樟嘉社区</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" class="navbar-brand">LanOS 主站</a>
+      <div class="navbar-nav">
+        <a href="/">首页</a>
+        <a href="https://zhangjiacenter.dpdns.org">评级中心</a>
+        <a href="https://talk.zhangjiacoins.dpdns.org">论坛</a>
+        <a href="{{ url_for('center.about') }}">关于</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('center.logout') }}">退出</a>
+        {% else %}
+        <a href="{{ url_for('center.login') }}">登录</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>欢迎来到樟嘉社区</h1>
+    <p>LanOS 2 · 社区 / 论坛 / 用户中心</p>
+    <a href="https://zhangjiacenter.dpdns.org" class="btn btn-primary btn-lg">前往评级中心 →</a>
+  </section>
+
+  <div class="container" style="padding-bottom:80px;">
+    <div class="quick-entries stagger">
+      <a href="https://zhangjiacenter.dpdns.org" class="quick-card">
+        <div class="quick-icon">⭐</div>
+        <h3>评级中心</h3>
+        <p>专业钱币评级服务</p>
+      </a>
+      <a href="https://talk.zhangjiacoins.dpdns.org" class="quick-card">
+        <div class="quick-icon">💬</div>
+        <h3>樟嘉论坛</h3>
+        <p>藏友交流社区</p>
+      </a>
+      <a href="https://intro.zhangjiacoins.dpdns.org" class="quick-card">
+        <div class="quick-icon">🌐</div>
+        <h3>生态门户</h3>
+        <p>LanShow OS</p>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
