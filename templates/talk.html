@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>樟嘉论坛</title>
+<meta name="theme-color" content="#ffffff">
+<style>
+:root{--gold:#c9a227;--gold-light:#e8c766;--gold-pale:#f7eed3;--cream:#fdfbf5;--dark:#1a1a1a;--dim:#8a8278;--line:#f0ece0;--bounce:cubic-bezier(.34,1.56,.64,1);--out:cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--cream);color:var(--dark);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding-bottom:70px;overflow-x:hidden}
+
+/* ========== 视图切换 ========== */
+.view{display:none}
+.view.active{display:block;animation:viewIn .35s var(--out)}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ========== 顶部栏 ========== */
+.topbar{position:sticky;top:0;z-index:100;background:#fff;padding:12px 16px 8px;box-shadow:0 2px 12px rgba(201,162,39,.06)}
+.topbar-row{display:flex;align-items:center;gap:12px}
+.search-input{flex:1;height:38px;border-radius:20px;border:none;background:var(--cream);padding:0 16px;font-size:14px;color:var(--dark);outline:none;transition:background .3s}
+.search-input:focus{background:#f7eed3}
+.search-input::placeholder{color:var(--dim)}
+.topbar .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-pale)}
+.tabs{display:flex;gap:22px;padding:10px 4px 0;overflow-x:auto;white-space:nowrap}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font-size:15px;color:var(--dim);font-weight:500;position:relative;padding-bottom:8px;cursor:pointer;transition:color .3s}
+.tab.active{color:var(--gold);font-weight:700}
+.tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:22px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--gold-light),var(--gold))}
+
+/* ========== 论坛信息流 ========== */
+.feed{padding:12px 0}
+.talk-card{background:#fff;margin:0 12px 12px;border-radius:16px;padding:16px;box-shadow:0 4px 16px rgba(201,162,39,.06);cursor:pointer}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.card-head img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-pale);flex-shrink:0}
+.card-head .info{flex:1;min-width:0}
+.card-head .name{font-size:14px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:6px}
+.card-head .name .badge{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--gold-pale);color:var(--gold);font-weight:600}
+.card-head .time{font-size:11px;color:var(--dim);margin-top:2px}
+.card-body{font-size:15px;line-height:1.65;color:var(--dark);margin-bottom:12px;word-break:break-word;white-space:pre-wrap}
+.card-body.collapsed{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.card-imgs{display:grid;gap:4px;margin-bottom:12px}
+.card-imgs.single{grid-template-columns:1fr;max-width:70%}
+.card-imgs.double{grid-template-columns:1fr 1fr}
+.card-imgs.multi{grid-template-columns:repeat(3,1fr)}
+.card-imgs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
+.card-imgs.single img{aspect-ratio:4/3}
+.card-actions{display:flex;gap:24px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--dim)}
+.card-actions .act{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.card-actions .act.liked{color:var(--gold);font-weight:700}
+.empty{text-align:center;color:var(--dim);padding:80px 20px;font-size:14px}
+.empty .icon{font-size:40px;margin-bottom:12px;opacity:.5}
+
+/* ========== 用户页 ========== */
+.profile-hero{margin:12px;background:#fff;border-radius:20px;padding:24px 20px;box-shadow:0 4px 16px rgba(201,162,39,.06);text-align:center}
+.profile-avatar{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--gold-pale);margin-bottom:12px;background:var(--gold);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:36px;font-weight:700;overflow:hidden}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-name{font-size:22px;font-weight:800;color:var(--dark);margin-bottom:4px}
+.profile-id{font-size:12px;color:var(--dim);margin-bottom:12px}
+.profile-stats{display:flex;justify-content:center;gap:24px;font-size:13px;color:var(--dim);margin-top:12px}
+.profile-stats strong{color:var(--gold);font-size:16px;display:block;margin-bottom:2px}
+.level-card{margin:12px;background:linear-gradient(135deg,var(--gold-pale),#fff);border-radius:16px;padding:16px 20px}
+.level-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.level-badge{font-size:18px;font-weight:900;color:var(--gold)}
+.level-exp{font-size:12px;color:var(--dim)}
+.level-bar{height:8px;border-radius:4px;background:#f0e8d0;overflow:hidden}
+.level-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold));transition:width 1s var(--out)}
+
+/* ========== 消息页 ========== */
+.dm-list{padding:12px}
+.dm-item{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 16px rgba(201,162,39,.06)}
+.dm-item .avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:var(--gold);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.dm-item .avatar img{width:100%;height:100%;object-fit:cover}
+.dm-item .info{flex:1;min-width:0}
+.dm-item .name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:2px}
+.dm-item .last{font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-item .badge{background:#e74c3c;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+
+/* ========== 悬浮发帖 ========== */
+.fab{position:fixed;right:20px;bottom:88px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#fff;font-size:28px;border:none;box-shadow:0 8px 24px rgba(201,162,39,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:99}
+.fab:active{transform:scale(.92)}
+
+/* ========== 底部导航 ========== */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;display:flex;justify-content:space-around;align-items:center;box-shadow:0 -2px 12px rgba(201,162,39,.06);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav button{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--dim);cursor:pointer;padding:6px 0;font-family:inherit;transition:color .3s}
+.bottom-nav button.active{color:var(--gold);font-weight:700}
+.bottom-nav button .icon{font-size:20px;display:inline-block;transition:transform .3s var(--bounce)}
+.bottom-nav button.active .icon{transform:translateY(-2px) scale(1.15)}
+
+/* ========== Toast ========== */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(26,26,26,.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;pointer-events:none;transition:all .3s var(--out);z-index:3000}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ========== 发帖弹窗 ========== */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);z-index:200;justify-content:center;align-items:flex-end}
+.modal.active{display:flex}
+.modal-box{background:#fff;border-radius:24px 24px 0 0;padding:24px;width:100%;max-height:85vh;overflow-y:auto;animation:sheetUp .4s var(--out) both}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-box h2{margin-bottom:16px;font-size:18px}
+.modal-box input,.modal-box textarea,.modal-box select{width:100%;padding:12px;margin-bottom:12px;border:1px solid var(--line);border-radius:14px;font-size:14px;background:var(--cream);outline:none;font-family:inherit;color:var(--dark)}
+.modal-box textarea{min-height:100px;resize:vertical}
+.modal-actions{display:flex;gap:12px}
+.modal-actions button{flex:1;padding:12px;border:none;border-radius:30px;font-weight:600;cursor:pointer;font-size:15px}
+.btn-cancel{background:var(--cream);color:var(--dim)}
+.btn-submit{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#fff}
+</style>
+</head>
+<body>
+
+<!-- ========== 论坛视图 ========== -->
+<div class="view active" id="view-talk">
+  <div class="topbar">
+    <div class="topbar-row">
+      <input class="search-input" placeholder="搜索帖子、用户..." id="searchInput">
+      <img src="/static/favicon.jpg" class="avatar" onclick="switchView('profile')">
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="recommend">推荐</div>
+      <div class="tab" data-tab="follow">关注</div>
+      <div class="tab" data-tab="hot">热榜</div>
+      <div class="tab" data-tab="latest">最新</div>
+    </div>
+  </div>
+  <div class="feed" id="feed"></div>
+  <button class="fab" onclick="openPostModal()">+</button>
+</div>
+
+<!-- ========== 用户视图 ========== -->
+<div class="view" id="view-profile">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div style="font-size:18px;font-weight:700;color:var(--gold);flex:1;">👤 我的</div>
+      <img src="/static/favicon.jpg" class="avatar" id="profileTopAvatar">
+    </div>
+  </div>
+  <div id="profileContent">
+    <div class="empty">加载中...</div>
+  </div>
+</div>
+
+<!-- ========== 消息视图 ========== -->
+<div class="view" id="view-dm">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div style="font-size:18px;font-weight:700;color:var(--gold);flex:1;">📩 消息</div>
+    </div>
+  </div>
+  <div class="dm-list" id="dmList"></div>
+</div>
+
+<!-- ========== 底部导航 ========== -->
+<nav class="bottom-nav">
+  <button data-view="profile"><span class="icon">👤</span>用户</button>
+  <button data-view="talk" class="active"><span class="icon">💬</span>论坛</button>
+  <button data-view="ecology"><span class="icon">✨</span>生态</button>
+  <button data-view="dm"><span class="icon">📩</span>消息</button>
+</nav>
+
+<!-- ========== 发帖弹窗 ========== -->
+<div class="modal" id="postModal">
+  <div class="modal-box">
+    <h2>📝 发布到樟嘉论坛</h2>
+    <input id="postTitle" placeholder="标题">
+    <textarea id="postContent" placeholder="内容..."></textarea>
+    <select id="postTag">
+      <option value="樟嘉专区">樟嘉专区</option>
+      <option value="先秦">先秦</option><option value="秦汉">秦汉</option>
+      <option value="隋唐">隋唐</option><option value="两宋">两宋</option>
+      <option value="元明">元明</option><option value="清代">清代</option>
+      <option value="花钱/厌胜钱">花钱/厌胜钱</option>
+    </select>
+    <input type="file" id="postImages" accept="image/*" multiple>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePostModal()">取消</button>
+      <button class="btn-submit" onclick="submitPost()">发布</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/posts?section=talk';
+let currentUser = null;
+
+/* ============ 视图切换 ============ */
+function switchView(name){
+  if(name === 'ecology'){
+    location.href = 'https://intro.zhangjiacoins.dpdns.org';
+    return;
+  }
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + name);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.bottom-nav button').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === name);
+  });
+  if(name === 'profile') loadProfile();
+  if(name === 'dm') loadDM();
+  if(name === 'talk') loadFeed();
+}
+
+document.querySelectorAll('.bottom-nav button').forEach(b => {
+  b.onclick = () => switchView(b.dataset.view);
+});
+
+/* ============ 论坛 ============ */
+async function loadFeed(tab='recommend'){
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '<div class="empty">加载中...</div>';
+  try{
+    const r = await fetch(API + '&tab=' + tab);
+    const posts = await r.json();
+    feed.innerHTML = '';
+    if(!posts.length){
+      feed.innerHTML = '<div class="empty"><div class="icon">🪙</div>还没有帖子<br>来发第一条吧～</div>';
+      return;
+    }
+    posts.forEach((p, i) => feed.appendChild(renderCard(p, i)));
+  }catch(e){
+    feed.innerHTML = '<div class="empty">加载失败</div>';
+  }
+}
+
+function renderCard(p, i){
+  const card = document.createElement('div');
+  card.className = 'talk-card';
+  card.onclick = () => location.href = '/talk/' + p.id;
+  const imgs = (p.images || []);
+  let imgClass = 'single';
+  if(imgs.length === 2) imgClass = 'double';
+  else if(imgs.length >= 3) imgClass = 'multi';
+  const imgHtml = imgs.map(src => `<img src="${src}" onclick="event.stopPropagation();previewImg('${src}')">`).join('');
+  card.innerHTML = `
+    <div class="card-head">
+      <img src="${p.avatar || '/static/favicon.jpg'}">
+      <div class="info">
+        <div class="name">${escapeHtml(p.username || '匿名')}${p.is_owner ? '<span class="badge">站长</span>' : ''}</div>
+        <div class="time">${escapeHtml(p.created_at || '')}</div>
+      </div>
+    </div>
+    <div class="card-body collapsed" onclick="event.stopPropagation();this.classList.toggle('collapsed')">${escapeHtml(p.content || '')}</div>
+    ${imgs.length ? `<div class="card-imgs ${imgClass}">${imgHtml}</div>` : ''}
+    <div class="card-actions">
+      <span class="act ${p.liked?'liked':''}" onclick="event.stopPropagation();toggleLike(this, ${p.id})">👍 ${p.likes||0}</span>
+      <span class="act">💬 ${p.comments||0}</span>
+      <span class="act">↗ 分享</span>
+    </div>
+  `;
+  return card;
+}
+
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
+function previewImg(src){
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  o.innerHTML = `<img src="${src}" style="max-width:95%;max-height:95%;object-fit:contain;">`;
+  o.onclick = () => o.remove();
+  document.body.appendChild(o);
+}
+async function toggleLike(el, id){
+  el.classList.toggle('liked');
+  try{ await fetch('/api/posts/' + id + '/like', {method:'POST'}); }catch(e){}
+}
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    loadFeed(t.dataset.tab);
+  };
+});
+
+/* ============ 用户页 ============ */
+async function loadProfile(){
+  const container = document.getElementById('profileContent');
+  container.innerHTML = '<div class="empty">加载中...</div>';
+  try{
+    const r = await fetch('/api/me');
+    if(!r.ok) throw new Error('未登录');
+    const u = await r.json();
+    currentUser = u;
+    const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : escapeHtml((u.username || '?')[0].toUpperCase());
+    const lv = u.growth_level || 1;
+    const exp = u.exp || 0;
+    const next = lv * 50;
+    const pct = Math.min((exp % 50) / 50 * 100, 100);
+
+    container.innerHTML = `
+      <div class="profile-hero">
+        <div class="profile-avatar">${avatarHtml}</div>
+        <div class="profile-name">${escapeHtml(u.username)}</div>
+        <div class="profile-id">ID: ${escapeHtml(u.display_id || '')}</div>
+        <div class="profile-stats">
+          <div><strong>${exp}</strong>EXP</div>
+          <div><strong>${u.credit_score || 0}</strong>信誉分</div>
+          <div><strong>LV${lv}</strong>等级</div>
+        </div>
+      </div>
+      <div class="level-card">
+        <div class="level-top">
+          <span class="level-badge">LV${lv}</span>
+          <span class="level-exp">${exp % 50}/50 EXP</span>
+        </div>
+        <div class="level-bar"><div class="level-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div style="margin:12px;text-align:center;">
+        <a href="https://www.zhangjiacoins.dpdns.org/#profile" style="color:var(--gold);font-size:14px;text-decoration:none;">在主站查看完整个人主页 →</a>
+      </div>
+    `;
+    document.getElementById('profileTopAvatar').src = u.avatar || '/static/favicon.jpg';
+  }catch(e){
+    container.innerHTML = '<div class="empty">请先登录<br><a href="https://www.zhangjiacoins.dpdns.org" style="color:var(--gold);text-decoration:none;font-size:14px;display:inline-block;margin-top:12px;">去主站登录 →</a></div>';
+  }
+}
+
+/* ============ 消息页 ============ */
+async function loadDM(){
+  const container = document.getElementById('dmList');
+  container.innerHTML = '<div class="empty">加载中...</div>';
+  try{
+    const r = await fetch('/api/dm/conversations');
+    if(!r.ok) throw new Error('未登录');
+    const convs = await r.json();
+    if(!convs.length){
+      container.innerHTML = '<div class="empty">暂无私信</div>';
+      return;
+    }
+    container.innerHTML = convs.map(c => `
+      <div class="dm-item" onclick="location.href='https://www.zhangjiacoins.dpdns.org/#dm'">
+        <div class="avatar">${c.avatar ? `<img src="${c.avatar}">` : escapeHtml((c.username || '?')[0].toUpperCase())}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(c.username)}</div>
+          <div class="last">${escapeHtml(c.last_message || '')}</div>
+        </div>
+        ${c.unread > 0 ? `<div class="badge">${c.unread}</div>` : ''}
+      </div>
+    `).join('');
+  }catch(e){
+    container.innerHTML = '<div class="empty">请先登录<br><a href="https://www.zhangjiacoins.dpdns.org" style="color:var(--gold);text-decoration:none;font-size:14px;display:inline-block;margin-top:12px;">去主站登录 →</a></div>';
+  }
+}
+
+/* ============ 发帖 ============ */
+function openPostModal(){ document.getElementById('postModal').classList.add('active'); }
+function closePostModal(){ document.getElementById('postModal').classList.remove('active'); }
+async function submitPost(){
+  const title = document.getElementById('postTitle').value.trim();
+  const content = document.getElementById('postContent').value.trim();
+  const tag = document.getElementById('postTag').value;
+  if(!title || !tag){ toast('标题和分类必填'); return; }
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('content', content);
+  fd.append('tag', tag);
+  fd.append('section', 'talk');
+  const files = document.getElementById('postImages').files;
+  for (let f of files) fd.append('images', f);
+  try{
+    const res = await fetch('/api/posts', { method: 'POST', body: fd });
+    const data = await res.json();
+    if(res.ok){
+      closePostModal();
+      toast('发布成功，等待审核');
+      setTimeout(() => loadFeed(), 800);
+    } else toast(data.error || '发布失败');
+  }catch(e){ toast('发布失败'); }
+}
+
+/* ============ Toast ============ */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ============ 初始化 ============ */
+loadFeed();
+</script>
+</body>
+</html>

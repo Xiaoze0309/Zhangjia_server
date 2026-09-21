@@ -262,10 +262,6 @@ def index():
 def talk():
     return render_template('talk.html')
 
-@app.route('/talk/<int:post_id>')
-def talk_detail(post_id):
-    return render_template('talk_detail.html')
-
 @app.route('/intro')
 def intro():
     return render_template('intro.html')
@@ -480,7 +476,6 @@ def add_post():
     tag = request.form.get('tag', '').strip()
     post_type = request.form.get('type', 'grade')
     grade_code = request.form.get('grade_code', '').strip()
-    section = request.form.get('section', 'home')
 
     if not title: return jsonify({'error': '标题不能为空'}), 400
     if not tag: return jsonify({'error': '请选择分类'}), 400
@@ -521,10 +516,10 @@ def add_post():
                     print(f"图片处理失败: {e}")
 
     with get_db() as conn:
-        conn.execute("""INSERT INTO posts (user_id, title, content, images, tag, grade_code, status, post_type, section)
-                        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)""",
+        conn.execute("""INSERT INTO posts (user_id, title, content, images, tag, grade_code, status, post_type)
+                        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)""",
                      (current_user.id, title, content, ','.join(saved) if saved else None, tag,
-                      grade_code if grade_code else None, post_type, section))
+                      grade_code if grade_code else None, post_type))
         conn.execute("UPDATE users SET exp = exp + 3 WHERE id = ?", (current_user.id,))
     return jsonify({'status': 'ok'}), 201
 

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>帖子详情 · 樟嘉论坛</title>
+<meta name="theme-color" content="#ffffff">
+<style>
+:root{--gold:#c9a227;--gold-light:#e8c766;--gold-pale:#f7eed3;--cream:#fdfbf5;--dark:#1a1a1a;--dim:#8a8278;--line:#f0ece0;--out:cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--cream);color:var(--dark);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding-bottom:90px;overflow-x:hidden}
+.topbar{position:sticky;top:0;z-index:100;background:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(201,162,39,.06)}
+.back-btn{background:none;border:none;font-size:22px;color:var(--gold);cursor:pointer;padding:0 8px}
+.title-text{font-size:15px;font-weight:700;color:var(--dark)}
+.post{padding:16px 20px;background:#fff}
+.post h1{font-size:20px;font-weight:800;color:var(--dark);margin-bottom:12px;line-height:1.4}
+.post-meta{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.post-meta img{width:36px;height:36px;border-radius:50%;border:2px solid var(--gold-pale)}
+.post-meta .info .name{font-size:14px;font-weight:700}
+.post-meta .info .time{font-size:11px;color:var(--dim);margin-top:2px}
+.post-content{font-size:15px;line-height:1.7;white-space:pre-wrap;word-break:break-word;margin-bottom:16px}
+.post-imgs{display:grid;gap:6px;margin-bottom:16px}
+.post-imgs.single{grid-template-columns:1fr}
+.post-imgs.multi{grid-template-columns:repeat(3,1fr)}
+.post-imgs img{width:100%;border-radius:12px;object-fit:cover;cursor:pointer}
+.post-imgs.single img{aspect-ratio:4/3}
+.post-imgs.multi img{aspect-ratio:1}
+.post-actions{display:flex;gap:24px;padding-top:12px;border-top:1px solid var(--line);font-size:14px;color:var(--dim)}
+.post-actions .act{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.post-actions .act.liked{color:var(--gold);font-weight:700}
+/* 评论区 */
+.comments{padding:16px 20px;background:var(--cream);margin-top:8px}
+.comments-title{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--gold-pale)}
+.comment{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.comment:last-child{border-bottom:none}
+.comment .avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;overflow:hidden;background:var(--gold);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.comment .avatar img{width:100%;height:100%;object-fit:cover}
+.comment .body{flex:1}
+.comment .name{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:2px}
+.comment .time{font-size:11px;color:var(--dim);margin-left:6px;font-weight:400}
+.comment .text{font-size:14px;line-height:1.6;color:var(--dark);word-break:break-word;margin-top:4px}
+.comment-children{margin-left:44px;margin-top:8px;padding-left:10px;border-left:2px solid var(--gold-pale)}
+.comment .reply-btn{font-size:12px;color:var(--dim);margin-top:4px;cursor:pointer}
+.comment .reply-btn:hover{color:var(--gold)}
+/* 输入栏 */
+.input-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:10px 12px;display:flex;gap:8px;box-shadow:0 -2px 12px rgba(201,162,39,.08);z-index:100;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.input-bar input{flex:1;padding:12px 16px;border:1px solid var(--line);border-radius:24px;font-size:14px;background:var(--cream);outline:none;color:var(--dark)}
+.input-bar button{padding:0 20px;border:none;border-radius:24px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#fff;font-weight:700;cursor:pointer}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(26,26,26,.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;pointer-events:none;transition:all .3s var(--out);z-index:3000}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">‹</button>
+  <div class="title-text">帖子详情</div>
+</div>
+
+<div id="content"></div>
+
+<div class="input-bar" id="inputBar" style="display:none;">
+  <input id="replyInput" placeholder="说点什么... 可用 @用户名 提及">
+  <button onclick="submitComment()">发送</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const postId = parseInt(location.pathname.split('/').pop());
+let postData = null;
+let replyTo = null;
+
+async function loadPost(){
+  try{
+    const r = await fetch('/api/posts/' + postId);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    postData = await r.json();
+    renderPost();
+    document.getElementById('inputBar').style.display = 'flex';
+  }catch(e){
+    document.getElementById('content').innerHTML = '<div style="text-align:center;padding:80px;color:#8a8278;">帖子不存在或未通过审核</div>';
+  }
+}
+
+function renderPost(){
+  const p = postData;
+  const imgs = p.images ? p.images.split(',') : [];
+  const imgHtml = imgs.length ? `<div class="post-imgs ${imgs.length > 1 ? 'multi' : 'single'}">${imgs.map(src => `<img src="/uploads/${src}" onclick="previewImg('/uploads/${src}')">`).join('')}</div>` : '';
+
+  const commentsHtml = (p.comments || []).map(c => renderComment(c)).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="post">
+      <h1>${escapeHtml(p.title)}</h1>
+      <div class="post-meta">
+        <img src="${p.avatar || '/static/favicon.jpg'}">
+        <div class="info">
+          <div class="name">${escapeHtml(p.username || '匿名')}</div>
+          <div class="time">${escapeHtml(p.created_at || '')} · 📍 ${escapeHtml(p.location || '')}</div>
+        </div>
+      </div>
+      <div class="post-content">${escapeHtml(p.content || '')}</div>
+      ${imgHtml}
+      <div class="post-actions">
+        <span class="act ${p.liked?'liked':''}" onclick="toggleLike()">👍 ${p.like_count || 0}</span>
+        <span class="act">💬 ${p.comment_count || 0}</span>
+        <span class="act" onclick="toast('已复制链接')">↗ 分享</span>
+      </div>
+    </div>
+    <div class="comments">
+      <div class="comments-title">💬 全部评论 (${(p.comments || []).length})</div>
+      <div id="commentList">${commentsHtml || '<div style="text-align:center;color:#8a8278;padding:30px;font-size:13px;">还没有评论，来抢沙发～</div>'}</div>
+    </div>
+  `;
+}
+
+function renderComment(c){
+  const avatarHtml = c.avatar ? `<img src="${c.avatar}">` : escapeHtml((c.username || '?')[0].toUpperCase());
+  const children = (c.children || []).map(child => renderComment(child)).join('');
+  return `
+    <div class="comment" data-cid="${c.id}">
+      <div class="avatar">${avatarHtml}</div>
+      <div class="body">
+        <div class="name">${escapeHtml(c.username || '匿名')}<span class="time">${escapeHtml(c.created_at || '')}</span></div>
+        <div class="text">${escapeHtml(c.content || '')}</div>
+        <div class="reply-btn" onclick="startReply(${c.id}, '${escapeHtml(c.username || '')}')">回复</div>
+        ${children ? `<div class="comment-children">${children}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function startReply(cid, name){
+  replyTo = cid;
+  const input = document.getElementById('replyInput');
+  input.placeholder = '回复 @' + name + '：';
+  input.focus();
+}
+
+async function submitComment(){
+  const input = document.getElementById('replyInput');
+  const content = input.value.trim();
+  if(!content){ toast('请输入内容'); return; }
+  const body = { content };
+  if(replyTo) body.parent_id = replyTo;
+  try{
+    const r = await fetch('/api/posts/' + postId + '/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if(!r.ok){
+      const err = await r.json().catch(()=>({}));
+      throw new Error(err.error || '发送失败');
+    }
+    input.value = '';
+    input.placeholder = '说点什么...';
+    replyTo = null;
+    toast('评论成功');
+    await loadPost();
+  }catch(e){ toast(e.message); }
+}
+
+async function toggleLike(){
+  try{
+    await fetch('/api/posts/' + postId + '/like', {method:'POST'});
+    await loadPost();
+  }catch(e){}
+}
+
+function previewImg(src){
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  o.innerHTML = `<img src="${src}" style="max-width:95%;max-height:95%;object-fit:contain;">`;
+  o.onclick = () => o.remove();
+  document.body.appendChild(o);
+}
+
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+loadPost();
+</script>
+</body>
+</html>

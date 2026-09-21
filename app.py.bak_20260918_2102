@@ -117,7 +117,7 @@ def init_db(db_path=MAIN_DB_PATH):
         try: conn.execute("ALTER TABLE messages ADD COLUMN notif_type TEXT DEFAULT NULL")
         except: pass
         conn.execute('''CREATE TABLE IF NOT EXISTS likes (id INTEGER PRIMARY KEY AUTOINCREMENT, post_id INTEGER NOT NULL, user_id INTEGER NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE(post_id, user_id))''')
-        conn.execute('''CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, post_id INTEGER NOT NULL, user_id INTEGER NOT NULL, content TEXT NOT NULL, parent_id INTEGER DEFAULT NULL, reply_to_user_id INTEGER DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY AUTOINCREMENT, post_id INTEGER NOT NULL, user_id INTEGER NOT NULL, content TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         conn.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
         conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('app_version', ?)", (DEFAULT_VERSION,))
         conn.execute('''CREATE TABLE IF NOT EXISTS admin_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, admin_id INTEGER NOT NULL, admin_name TEXT NOT NULL, action TEXT NOT NULL, target_type TEXT, target_id INTEGER, detail TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
@@ -261,10 +261,6 @@ def index():
 @app.route('/talk')
 def talk():
     return render_template('talk.html')
-
-@app.route('/talk/<int:post_id>')
-def talk_detail(post_id):
-    return render_template('talk_detail.html')
 
 @app.route('/intro')
 def intro():
@@ -423,14 +419,11 @@ def get_posts():
     tag = request.args.get('tag', '').strip()
     user_id = request.args.get('user_id', '')
     feed = request.args.get('feed', 'all')
-    section = request.args.get('section', 'home')
 
     sql = """SELECT posts.*, users.username, users.credit_score, users.is_webmaster,
              users.is_boss, users.is_alpha, users.is_beta, users.avatar, users.display_id
              FROM posts LEFT JOIN users ON posts.user_id = users.id WHERE 1=1"""
     params = []
-    sql += " AND posts.section = ?"
-    params.append(section)
     if not current_user.is_authenticated or (current_user.admin_level < 1 and not current_user.is_webmaster):
         sql += " AND posts.status = 'approved'"
     if search:
@@ -480,7 +473,6 @@ def add_post():
     tag = request.form.get('tag', '').strip()
     post_type = request.form.get('type', 'grade')
     grade_code = request.form.get('grade_code', '').strip()
-    section = request.form.get('section', 'home')
 
     if not title: return jsonify({'error': '标题不能为空'}), 400
     if not tag: return jsonify({'error': '请选择分类'}), 400
@@ -521,10 +513,10 @@ def add_post():
                     print(f"图片处理失败: {e}")
 
     with get_db() as conn:
-        conn.execute("""INSERT INTO posts (user_id, title, content, images, tag, grade_code, status, post_type, section)
-                        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)""",
+        conn.execute("""INSERT INTO posts (user_id, title, content, images, tag, grade_code, status, post_type)
+                        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)""",
                      (current_user.id, title, content, ','.join(saved) if saved else None, tag,
-                      grade_code if grade_code else None, post_type, section))
+                      grade_code if grade_code else None, post_type))
         conn.execute("UPDATE users SET exp = exp + 3 WHERE id = ?", (current_user.id,))
     return jsonify({'status': 'ok'}), 201
 
@@ -652,7 +644,6 @@ def add_comment(post_id):
     data = request.get_json()
     content = (data.get('content') or '').strip()
     parent_id = data.get('parent_id')
-    reply_to_user_id = data.get('reply_to_user_id')
     if not content: return jsonify({'error': '评论不能为空'}), 400
     if len(content) > 500: return jsonify({'error': '评论过长（最多500字）'}), 400
     for w in ['涉黄', '涉黑', '违法']:
@@ -661,8 +652,8 @@ def add_comment(post_id):
     mentions = re.findall(r'@([A-Za-z0-9_\u4e00-\u9fa5]{2,20})', content)
 
     with get_db() as conn:
-        cursor = conn.execute("INSERT INTO comments (post_id, user_id, content, parent_id, reply_to_user_id) VALUES (?,?,?,?,?)",
-                              (post_id, current_user.id, content, parent_id, reply_to_user_id))
+        cursor = conn.execute("INSERT INTO comments (post_id, user_id, content, parent_id) VALUES (?,?,?,?)",
+                              (post_id, current_user.id, content, parent_id))
         conn.execute("UPDATE users SET exp = exp + 1 WHERE id = ?", (current_user.id,))
         new_id = cursor.lastrowid
 
@@ -675,11 +666,6 @@ def add_comment(post_id):
             if parent and parent['user_id'] != current_user.id:
                 conn.execute("INSERT INTO messages (sender_id, receiver_id, content, is_system, notif_type) VALUES (?, ?, ?, 1, 'reply')",
                              (0, parent['user_id'], f"↩️ {current_user.username} 回复了你的评论"))
-
-        if reply_to_user_id and reply_to_user_id != current_user.id:
-            if not parent_id or reply_to_user_id != parent['user_id']:
-                conn.execute("INSERT INTO messages (sender_id, receiver_id, content, is_system, notif_type) VALUES (?, ?, ?, 1, 'reply')",
-                             (0, reply_to_user_id, f"↩️ {current_user.username} 回复了你的评论"))
 
         for name in mentions:
             target = conn.execute("SELECT id FROM users WHERE username = ?", (name,)).fetchone()
@@ -1466,30 +1452,9 @@ def get_system_messages():
         rows = conn.execute("SELECT * FROM messages WHERE receiver_id = ? AND is_system = 1 ORDER BY created_at DESC LIMIT 50", (current_user.id,)).fetchall()
         return jsonify([dict(row) for row in rows])
 
-
-@app.route('/manifest.json')
-def pwa_manifest():
-    resp = send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
-    resp.headers['Cache-Control'] = 'public, max-age=86400'
-    return resp
-
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-# ========== 全局异常日志（调试用） ==========
-@app.errorhandler(Exception)
-def handle_all_exceptions(e):
-    import traceback
-    from werkzeug.exceptions import HTTPException
-    if isinstance(e, HTTPException):
-        return e
-    print("\n========== [APP ERROR] ==========")
-    print("Host:", request.host)
-    print("Path:", request.path)
-    print(traceback.format_exc())
-    print("=================================\n")
-    return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
