@@ -1,21 +1,36 @@
-database.db
-uploads/
-*.db
-*.sqlite
+# Python
 __pycache__/
 *.pyc
-*.pyo
-.log
-nohup.out
-server.log
-tunnel.log
-ngrok*
-zrok*
-bore*
-WARP.conf
-warp_config_Amnezia.sh
+venv/
+.venv/
+
+# SQLite 运行时文件
+*.db-shm
+*.db-wal
+*.db-journal
+
+# 备份文件
 *.bak
-*.tgz
-*.tar.gz
+*.bak_*
+*.old
+*.old_backup
+*.lanos2
+*.backup
+
+# 日志
 *.log
-*.log
+nohup.out
+
+# 环境变量
+.env
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 安全快照
+.lansafe_snapshots/
+
+# 临时上传
+uploads/*
+!uploads/.gitkeep
