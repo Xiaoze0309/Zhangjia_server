@@ -6,18 +6,22 @@
   <div class="container-sm">
     <div class="card">
       <h2 class="card-title">评级查询</h2>
-      <p class="card-desc">关键词：{{ keyword }}</p>
+      <p class="card-desc">查询关键词：{{ keyword }}</p>
 
       {% if order %}
         <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:20px;margin-bottom:24px;">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
-              <div style="font-size:13px;color:var(--color-text-muted);">订单号</div>
+              <div style="font-size:13px;color:var(--color-text-muted);">EPID</div>
               <div style="font-weight:600;">{{ order.order_no }}</div>
             </div>
             <div>
               <div style="font-size:13px;color:var(--color-text-muted);">证书号</div>
               <div style="font-weight:600;">{{ order.cert_no or '—' }}</div>
+            </div>
+            <div>
+              <div style="font-size:13px;color:var(--color-text-muted);">部门</div>
+              <div style="font-weight:600;">{{ order.department or '—' }}</div>
             </div>
             <span class="badge badge-{{ order.status }}">{{ {'pending':'待支付','paid':'已支付','rating':'评级中','done':'已完成','rejected':'已驳回'}.get(order.status, order.status) }}</span>
           </div>
@@ -32,7 +36,7 @@
           <div class="timeline-item {% if order.status in ['paid','rating','done'] %}done{% elif order.status == 'pending' %}active{% endif %}">
             <div class="timeline-dot"></div>
             <h4>支付完成</h4>
-            <p>{{ '已支付' if order.status in ['paid','rating','done'] else '等待支付' }}</p>
+            <p>{{ '已支付 ¥' ~ order.final_price if order.status in ['paid','rating','done'] else '等待支付' }}</p>
           </div>
           <div class="timeline-item {% if order.status in ['rating','done'] %}done{% elif order.status == 'paid' %}active{% endif %}">
             <div class="timeline-dot"></div>
@@ -52,6 +56,13 @@
           <tr><th>年代</th><td>{{ order.coin_era or '—' }}</td></tr>
           <tr><th>藏品描述</th><td>{{ order.coin_desc or '—' }}</td></tr>
           <tr><th>联系方式</th><td>{{ order.contact }}</td></tr>
+          <tr><th>服务类型</th><td>{{ '线上评级' if order.service_type == 'online' else '线下评级' }}</td></tr>
+          <tr><th>盒子类型</th><td>{{ order.box_type or '—' }}</td></tr>
+          <tr><th>保真</th><td>{{ '是' if order.has_guarantee else '否' }}</td></tr>
+          <tr><th>实付金额</th><td>¥{{ '%.2f'|format(order.final_price or order.base_price or 0) }}</td></tr>
+          {% if order.coupon_code %}
+          <tr><th>优惠券</th><td>{{ order.coupon_code }}</td></tr>
+          {% endif %}
         </table>
 
         {% if order.status == 'done' and order.cert_result %}
@@ -59,6 +70,16 @@
           <div class="card" style="background:var(--color-bg);">
             <pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;">{{ order.cert_result }}</pre>
           </div>
+        {% endif %}
+
+        {% if order.status == 'done' and order.tracking_no %}
+          <h4 style="margin-bottom:12px;margin-top:24px;">邮寄信息</h4>
+          <table class="table" style="margin-bottom:24px;">
+            <tr><th style="width:30%;">邮寄单号</th><td>{{ order.tracking_no }}</td></tr>
+            {% if order.return_address %}
+            <tr><th>回寄地址</th><td>{{ order.return_address }}</td></tr>
+            {% endif %}
+          </table>
         {% endif %}
 
         {% if order.status == 'pending' %}
@@ -69,7 +90,7 @@
         <div style="text-align:center;padding:40px 0;">
           <div style="font-size:48px;margin-bottom:16px;">🔍</div>
           <p style="color:var(--color-text-secondary);">未找到相关记录</p>
-          <p style="color:var(--color-text-muted);font-size:13px;margin-top:8px;">请确认证书号 / 订单号 / 手机号是否正确</p>
+          <p style="color:var(--color-text-muted);font-size:13px;margin-top:8px;">请确认 EPID / 证书号 / 手机号是否正确</p>
           <a href="{{ url_for('center.center_index') }}" class="btn btn-secondary" style="margin-top:24px;">返回首页</a>
         </div>
       {% endif %}

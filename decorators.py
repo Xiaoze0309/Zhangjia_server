@@ -10,7 +10,7 @@ def login_required(f):
             if request.path.startswith('/api/'):
                 return jsonify({'success': False, 'message': '请先登录'}), 401
             flash('请先登录', 'warning')
-            return redirect(url_for('login'))
+            return redirect(url_for('center.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -22,12 +22,12 @@ def rater_required(f):
             if request.path.startswith('/api/'):
                 return jsonify({'success': False, 'message': '请先登录'}), 401
             flash('请先登录', 'warning')
-            return redirect(url_for('login'))
+            return redirect(url_for('center.login'))
         if not current_user.is_rater_user:
             if request.path.startswith('/api/'):
                 return jsonify({'success': False, 'message': '需要评级师权限'}), 403
             flash('需要评级师权限', 'error')
-            return redirect(url_for('center_index'))
+            return redirect(url_for('center.center_index'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -39,12 +39,12 @@ def admin_required(f):
             if request.path.startswith('/api/'):
                 return jsonify({'success': False, 'message': '请先登录'}), 401
             flash('请先登录', 'warning')
-            return redirect(url_for('login'))
+            return redirect(url_for('center.login'))
         if not current_user.is_admin_user:
             if request.path.startswith('/api/'):
                 return jsonify({'success': False, 'message': '需要管理员权限'}), 403
             flash('需要管理员权限', 'error')
-            return redirect(url_for('center_index'))
+            return redirect(url_for('center.center_index'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -57,6 +57,5 @@ def rate_limit(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # 实际生产中可接入 Redis 或 Flask-Limiter
-        # 这里保留接口占位
         return f(*args, **kwargs)
     return decorated_function

@@ -10,6 +10,47 @@
 
       <form id="applyForm" enctype="multipart/form-data">
         <div class="form-group">
+          <label class="form-label">评级部门 *</label>
+          <select name="department" class="form-control" id="department" required onchange="updatePrice()">
+            <option value="">请选择部门</option>
+            {% for dept in departments %}
+            <option value="{{ dept.slug }}">{{ dept.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">服务类型 *</label>
+          <div style="display:flex;gap:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="radio" name="service_type" value="online" checked onchange="updatePrice()"> 线上评级
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="radio" name="service_type" value="offline" onchange="updatePrice()"> 线下评级
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">盒子类型 *</label>
+          <div style="display:flex;gap:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="radio" name="box_type" value="PLA" checked onchange="updatePrice()"> PLA 盒（普通）
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="radio" name="box_type" value="JIN" onchange="updatePrice()"> JIN 盒（精装）
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">保真服务</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" name="has_guarantee" value="1" onchange="updatePrice()"> 是，需要保真认证（+¥20）
+          </label>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">联系手机号 *</label>
           <input type="tel" name="contact" class="form-control" placeholder="请输入手机号" required>
         </div>
@@ -39,6 +80,26 @@
           <div class="image-preview" id="imagePreview"></div>
         </div>
 
+        <div class="form-group">
+          <label class="form-label">优惠券码（选填）</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" name="coupon_code" id="couponCode" class="form-control" placeholder="输入 EFID 券码">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="verifyCoupon()">验证</button>
+          </div>
+          <div id="couponResult" style="margin-top:8px;font-size:13px;"></div>
+        </div>
+
+        <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:16px;margin-bottom:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--color-text-secondary);">原价</span>
+            <span style="font-size:14px;text-decoration:line-through;color:var(--color-text-muted);" id="basePrice">¥--</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+            <span style="font-weight:600;">实付金额</span>
+            <span style="font-size:24px;font-weight:700;color:var(--color-gold);" id="finalPrice">¥--</span>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-primary btn-block btn-lg">提交申请</button>
       </form>
     </div>
@@ -46,6 +107,64 @@
 </section>
 
 <script>
+function updatePrice() {
+  const dept = document.getElementById('department').value;
+  if (!dept) { return; }
+  const serviceType = document.querySelector('input[name=service_type]:checked').value;
+  const boxType = document.querySelector('input[name=box_type]:checked').value;
+  const hasGuarantee = document.querySelector('input[name=has_guarantee]').checked ? 1 : 0;
+
+  fetch(`/api/center/pricing?department=${dept}&service_type=${serviceType}&box_type=${boxType}&has_guarantee=${hasGuarantee}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('basePrice').textContent = `¥${data.price.toFixed(2)}`;
+        // 如果有券码且是全免，显示 0
+        const couponResult = document.getElementById('couponResult');
+        if (couponResult.dataset.discount === 'full') {
+          document.getElementById('finalPrice').textContent = '¥0.00';
+        } else {
+          document.getElementById('finalPrice').textContent = `¥${data.price.toFixed(2)}`;
+        }
+      }
+    });
+}
+
+function verifyCoupon() {
+  const code = document.getElementById('couponCode').value.trim();
+  if (!code) { return; }
+
+  fetch('/api/center/coupon/verify', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({coupon_code: code})
+  })
+    .then(r => r.json())
+    .then(data => {
+      const el = document.getElementById('couponResult');
+      if (data.success) {
+        el.style.color = 'var(--color-success)';
+        el.dataset.discount = data.discount_type;
+        el.textContent = '✓ ' + data.message;
+        if (data.discount_type === 'full') {
+          document.getElementById('finalPrice').textContent = '¥0.00';
+        } else {
+          const base = parseFloat(document.getElementById('basePrice').textContent.replace(/[¥]/g,'')) || 0;
+          const final = Math.max(0, base - data.discount_value);
+          document.getElementById('finalPrice').textContent = `¥${final.toFixed(2)}`;
+        }
+      } else {
+        el.style.color = 'var(--color-error)';
+        el.dataset.discount = '';
+        el.textContent = '✗ ' + data.message;
+        updatePrice();
+      }
+    })
+    .catch(() => {
+      document.getElementById('couponResult').textContent = '验证失败，请重试';
+    });
+}
+
 function previewImages(input) {
   const preview = document.getElementById('imagePreview');
   preview.innerHTML = '';
@@ -74,7 +193,7 @@ document.getElementById('applyForm').addEventListener('submit', async function(e
     });
     const data = await res.json();
     if (data.success) {
-      alert('申请提交成功！订单号：' + data.order_no);
+      alert(`申请提交成功！\nEPID：${data.order_no}\n实付金额：¥${data.final_price.toFixed(2)}`);
       window.location.href = data.redirect;
     } else {
       alert(data.message || '提交失败');
