@@ -86,6 +86,30 @@ class LotteryRecord(db.Model):
     created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow)
 
 
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(128), nullable=False)
+    content = db.Column(db.Text)
+    type = db.Column(db.String(32), default='info')   # info/success/warning/order
+    is_read = db.Column(db.Integer, default=0)
+    link = db.Column(db.String(256))                  # 点击跳转链接
+    created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'content': self.content,
+            'type': self.type,
+            'is_read': self.is_read,
+            'link': self.link,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+
 class CertOrder(db.Model):
     __tablename__ = 'cert_orders'
 

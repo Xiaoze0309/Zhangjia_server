@@ -546,6 +546,168 @@ textarea.form-control {
 }
 
 /* ============================================================
+   分步进度条
+   ============================================================ */
+
+.step-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.step-progress::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 28px;
+  right: 28px;
+  height: 2px;
+  background: var(--color-border);
+  z-index: 0;
+}
+
+.step-item {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  flex: 1;
+}
+
+.step-num {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-card);
+  border: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  transition: var(--transition);
+}
+
+.step-item.active .step-num {
+  background: var(--color-primary-gradient);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.step-item.done .step-num {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #fff;
+}
+
+.step-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.step-item.active .step-label,
+.step-item.done .step-label {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* ============================================================
+   保真色标
+   ============================================================ */
+
+.guarantee-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.guarantee-tag.yes {
+  background: #E8EDE3;
+  color: var(--color-success);
+}
+
+.guarantee-tag.no {
+  background: #EDE8DC;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   系统消息
+   ============================================================ */
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--color-error);
+  color: #fff;
+  font-size: 11px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.notification-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  transition: var(--transition);
+}
+
+.notification-item:hover {
+  background: var(--color-bg);
+}
+
+.notification-item.unread {
+  background: rgba(201, 162, 39, 0.04);
+}
+
+.notification-item .notif-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.notification-item .notif-time {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ============================================================
+   定价管理
+   ============================================================ */
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pricing-card {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+}
+
+.pricing-card .price-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 8px 0;
+}
+
+/* ============================================================
    响应式
    ============================================================ */
 

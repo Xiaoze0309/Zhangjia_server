@@ -20,7 +20,10 @@
         {% endif %}
         <a href="{{ url_for('center.about') }}">关于我们</a>
         {% if current_user.is_authenticated %}
-        <span style="color:var(--color-text-muted);font-size:13px;">{{ current_user.username }}</span>
+        <a href="{{ url_for('center.center_profile') }}" style="position:relative;">
+          🔔<span id="notifBadge" class="notification-badge" style="display:none;">0</span>
+        </a>
+        <a href="{{ url_for('center.center_profile') }}">{{ current_user.username }}</a>
         <a href="{{ url_for('center.logout') }}">退出</a>
         {% else %}
         <a href="{{ url_for('center.login') }}">登录</a>
@@ -44,5 +47,15 @@
   </main>
 
   {% block scripts %}{% endblock %}
+  {% if current_user.is_authenticated %}
+  <script>
+  fetch('/api/center/notifications').then(r=>r.json()).then(d=>{
+    if(d.success && d.unread_count > 0){
+      const b = document.getElementById('notifBadge');
+      if(b){ b.textContent = d.unread_count > 99 ? '99+' : d.unread_count; b.style.display = 'flex'; }
+    }
+  }).catch(()=>{});
+  </script>
+  {% endif %}
 </body>
 </html>

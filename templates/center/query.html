@@ -58,7 +58,13 @@
           <tr><th>联系方式</th><td>{{ order.contact }}</td></tr>
           <tr><th>服务类型</th><td>{{ '线上评级' if order.service_type == 'online' else '线下评级' }}</td></tr>
           <tr><th>盒子类型</th><td>{{ order.box_type or '—' }}</td></tr>
-          <tr><th>保真</th><td>{{ '是' if order.has_guarantee else '否' }}</td></tr>
+          <tr><th>保真</th><td>
+            {% if order.has_guarantee %}
+            <span class="guarantee-tag yes">✓ 保真</span>
+            {% else %}
+            <span class="guarantee-tag no">不保真</span>
+            {% endif %}
+          </td></tr>
           <tr><th>实付金额</th><td>¥{{ '%.2f'|format(order.final_price or order.base_price or 0) }}</td></tr>
           {% if order.coupon_code %}
           <tr><th>优惠券</th><td>{{ order.coupon_code }}</td></tr>

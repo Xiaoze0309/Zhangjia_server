@@ -9,7 +9,7 @@ from flask import (Blueprint, render_template, request, redirect, url_for,
 from flask_login import login_user, logout_user, current_user
 
 from config import Config
-from models import db, User, CertOrder, Department, DepartmentPricing, Coupon, LotteryRecord
+from models import db, User, CertOrder, Department, DepartmentPricing, Coupon, LotteryRecord, Notification
 from decorators import login_required, rater_required, admin_required
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -514,6 +514,16 @@ def api_rater_publish():
     order.status = 'done'
     db.session.commit()
 
+    # 系统消息：评级完成通知用户
+    if order.user_id:
+        send_notification(
+            user_id=order.user_id,
+            title='评级结果已发布',
+            content=f'您的订单 {order.order_no}（{order.coin_name}）评级已完成，证书号：{cert_no}',
+            notif_type='order',
+            link=url_for('center.center_query', keyword=order.order_no),
+        )
+
     return jsonify({'success': True, 'message': '评级结果已发布'})
 
 
@@ -570,6 +580,166 @@ def api_rater_tracking():
     db.session.commit()
 
     return jsonify({'success': True, 'message': '邮寄信息已更新'})
+
+
+# ============================================================
+# 个人主页 + 评级记录
+# ============================================================
+
+@center_bp.route('/center/profile')
+@login_required
+def center_profile():
+    """个人主页 - 显示用户评级记录"""
+    orders = CertOrder.query.filter_by(user_id=current_user.id).order_by(
+        CertOrder.created_at.desc()).limit(20).all()
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(
+        Notification.created_at.desc()).limit(10).all()
+    return render_template('center/profile.html', orders=orders, notifications=notifications)
+
+
+@center_bp.route('/api/center/notifications')
+@login_required
+def api_notifications():
+    """获取当前用户通知列表"""
+    notifs = Notification.query.filter_by(user_id=current_user.id).order_by(
+        Notification.created_at.desc()).limit(20).all()
+    unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=0).count()
+    return jsonify({
+        'success': True,
+        'unread_count': unread_count,
+        'data': [n.to_dict() for n in notifs],
+    })
+
+
+@center_bp.route('/api/center/notifications/<int:nid>/read', methods=['POST'])
+@login_required
+def api_notification_read(nid):
+    """标记通知已读"""
+    notif = Notification.query.get(nid)
+    if notif and notif.user_id == current_user.id:
+        notif.is_read = 1
+        db.session.commit()
+    return jsonify({'success': True})
+
+
+@center_bp.route('/api/center/notifications/read_all', methods=['POST'])
+@login_required
+def api_notification_read_all():
+    """全部标记已读"""
+    Notification.query.filter_by(user_id=current_user.id, is_read=0).update({'is_read': 1})
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+def send_notification(user_id, title, content='', notif_type='info', link=None):
+    """发送系统通知"""
+    notif = Notification(
+        user_id=user_id,
+        title=title,
+        content=content,
+        type=notif_type,
+        link=link,
+    )
+    db.session.add(notif)
+    db.session.commit()
+
+
+# ============================================================
+# 动态定价管理（评级师/管理员）
+# ============================================================
+
+@center_bp.route('/api/center/pricing/list')
+@rater_required
+def api_pricing_list():
+    """获取本部门定价列表"""
+    dept_slug = current_user.rater_department
+    if current_user.is_admin_user:
+        dept_slug = request.args.get('department', dept_slug or '')
+
+    query = DepartmentPricing.query
+    if dept_slug:
+        query = query.filter_by(department_slug=dept_slug)
+    pricings = query.order_by(DepartmentPricing.service_type, DepartmentPricing.box_type, DepartmentPricing.has_guarantee).all()
+
+    return jsonify({
+        'success': True,
+        'department': dept_slug,
+        'data': [
+            {
+                'id': p.id,
+                'service_type': p.service_type,
+                'box_type': p.box_type,
+                'has_guarantee': p.has_guarantee,
+                'price': p.price,
+            }
+            for p in pricings
+        ],
+    })
+
+
+@center_bp.route('/api/center/pricing/update', methods=['POST'])
+@rater_required
+def api_pricing_update():
+    """更新/新增定价"""
+    data = request.get_json() if request.is_json else request.form
+    pricing_id = data.get('id')
+    dept_slug = current_user.rater_department
+    if current_user.is_admin_user:
+        dept_slug = data.get('department', dept_slug)
+    service_type = data.get('service_type', 'online')
+    box_type = data.get('box_type', 'PLA')
+    has_guarantee = int(data.get('has_guarantee', 0))
+    price = float(data.get('price', 0))
+
+    if not dept_slug:
+        return jsonify({'success': False, 'message': '请先分配评级部门'}), 400
+
+    if pricing_id:
+        pricing = DepartmentPricing.query.get(pricing_id)
+        if pricing:
+            pricing.price = price
+    else:
+        pricing = DepartmentPricing(
+            department_slug=dept_slug,
+            service_type=service_type,
+            box_type=box_type,
+            has_guarantee=has_guarantee,
+            price=price,
+        )
+        db.session.add(pricing)
+    db.session.commit()
+    return jsonify({'success': True, 'message': '定价已更新'})
+
+
+@center_bp.route('/api/center/pricing/daily', methods=['POST'])
+@rater_required
+def api_pricing_daily():
+    """发布每日优惠：生成限时优惠券"""
+    data = request.get_json() if request.is_json else request.form
+    count = int(data.get('count', 5))
+    discount_type = data.get('discount_type', 'fixed')
+    discount_value = float(data.get('discount_value', 10))
+
+    created = []
+    for _ in range(count):
+        efid = gen_efid()
+        while Coupon.query.filter_by(efid=efid).first():
+            efid = gen_efid()
+        coupon = Coupon(
+            efid=efid,
+            discount_type=discount_type,
+            discount_value=discount_value,
+            is_used=0,
+        )
+        db.session.add(coupon)
+        created.append(efid)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'已生成 {count} 张每日优惠券',
+        'coupons': created,
+    })
 
 
 # ============================================================

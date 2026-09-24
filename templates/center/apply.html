@@ -8,6 +8,26 @@
       <h2 class="card-title">申请评级</h2>
       <p class="card-desc">请填写以下信息，我们将为您的藏品进行专业评级</p>
 
+      <!-- 分步进度条 -->
+      <div class="step-progress">
+        <div class="step-item active" data-step="1">
+          <div class="step-num">1</div>
+          <div class="step-label">选择服务</div>
+        </div>
+        <div class="step-item" data-step="2">
+          <div class="step-num">2</div>
+          <div class="step-label">填写信息</div>
+        </div>
+        <div class="step-item" data-step="3">
+          <div class="step-num">3</div>
+          <div class="step-label">上传凭证</div>
+        </div>
+        <div class="step-item" data-step="4">
+          <div class="step-num">4</div>
+          <div class="step-label">确认提交</div>
+        </div>
+      </div>
+
       <form id="applyForm" enctype="multipart/form-data">
         <div class="form-group">
           <label class="form-label">评级部门 *</label>
@@ -178,6 +198,32 @@ function previewImages(input) {
     reader.readAsDataURL(file);
   });
 }
+
+// 分步进度条：根据填写情况自动更新
+function updateSteps() {
+  const dept = document.getElementById('department').value;
+  const contact = document.querySelector('input[name=contact]').value;
+  const coinName = document.querySelector('input[name=coin_name]').value;
+  const files = document.getElementById('fileInput').files.length;
+
+  const s1 = dept ? 'done' : 'active';
+  const s2 = (contact && coinName) ? 'done' : (dept ? 'active' : '');
+  const s3 = files > 0 ? 'done' : ((contact && coinName) ? 'active' : '');
+  const s4 = (contact && coinName && dept) ? 'active' : '';
+
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    const state = [s1, s2, s3, s4][i];
+    if (state) el.classList.add(state);
+  });
+}
+
+// 监听所有输入变化
+document.querySelectorAll('#applyForm input, #applyForm select, #applyForm textarea').forEach(el => {
+  el.addEventListener('input', updateSteps);
+  el.addEventListener('change', updateSteps);
+});
+updateSteps();
 
 document.getElementById('applyForm').addEventListener('submit', async function(e) {
   e.preventDefault();

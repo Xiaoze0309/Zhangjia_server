@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LanOS 2.5 - 文件下载</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #FAF8F3; margin: 0; padding: 40px 20px; color: #2C2C2C; }
+  .container { max-width: 600px; margin: 0 auto; }
+  h1 { color: #C9A227; text-align: center; margin-bottom: 8px; }
+  p.subtitle { text-align: center; color: #6B6357; margin-bottom: 32px; }
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(201,162,39,.08); padding: 28px; margin-bottom: 16px; }
+  .card h3 { margin: 0 0 8px; }
+  .card .desc { color: #6B6357; font-size: 14px; margin-bottom: 16px; }
+  .btn { display: inline-block; padding: 12px 28px; border-radius: 12px; background: linear-gradient(135deg, #C9A227, #E8C766); color: #fff; text-decoration: none; font-weight: 600; transition: transform .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: scale(.97); }
+  .size { color: #A8A093; font-size: 13px; margin-left: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>LanOS 2.5 增强版</h1>
+  <p class="subtitle">点击下方按钮下载项目代码包</p>
+
+  <div class="card">
+    <h3>lanos2.5_blueprint.tar.gz <span class="size">17 KB</span></h3>
+    <p class="desc">Blueprint 改造版（center_app.py + app.py 主入口），最新代码</p>
+    <a href="/download/lanos2.5_blueprint.tar.gz" class="btn">下载 Blueprint 版</a>
+  </div>
+
+  <div class="card">
+    <h3>lanos2.5_qemu_transfer.tar.gz <span class="size">16 KB</span></h3>
+    <p class="desc">QEMU 虚拟机转移版，含 ACME 验证文件</p>
+    <a href="/download/lanos2.5_qemu_transfer.tar.gz" class="btn">下载 QEMU 版</a>
+  </div>
+</div>
+</body>
+</html>

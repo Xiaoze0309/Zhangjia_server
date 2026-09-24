@@ -12,14 +12,21 @@
             {% if rater_dept %}{{ rater_dept.name }} · {{ rater_dept.euid_prefix or '' }}{% endif %}
           </p>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-primary" id="tabOrders" onclick="switchTab('orders')">订单管理</button>
+          <button class="btn btn-sm btn-secondary" id="tabPricing" onclick="switchTab('pricing')">定价管理</button>
+          <button class="btn btn-sm btn-secondary" id="tabDaily" onclick="switchTab('daily')">每日优惠</button>
+        </div>
+      </div>
+
+      <!-- 订单管理 -->
+      <div id="orderPanel">
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
           <button class="btn btn-sm btn-secondary" onclick="loadOrders('paid')">待评级</button>
           <button class="btn btn-sm btn-secondary" onclick="loadOrders('done')">已完成</button>
           <button class="btn btn-sm btn-secondary" onclick="loadOrders('all')">全部</button>
         </div>
-      </div>
-
-      <div id="orderList">
+        <div id="orderList">
         <table class="table">
           <thead>
             <tr>
@@ -37,6 +44,58 @@
             <tr><td colspan="8" style="text-align:center;color:var(--color-text-muted);">加载中...</td></tr>
           </tbody>
         </table>
+        </div>
+      </div>
+
+      <!-- 定价管理 -->
+      <div id="pricingPanel" style="display:none;">
+        <p class="card-desc" style="margin-bottom:16px;">管理本部门各服务类型评级价格</p>
+        <div id="pricingGrid" class="pricing-grid"></div>
+        <div class="card" style="background:var(--color-bg);">
+          <h4 style="margin-bottom:16px;">更新定价</h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">
+            <select id="pService" class="form-control">
+              <option value="online">线上评级</option>
+              <option value="offline">线下评级</option>
+            </select>
+            <select id="pBox" class="form-control">
+              <option value="PLA">PLA 盒</option>
+              <option value="JIN">JIN 盒</option>
+            </select>
+            <select id="pGuarantee" class="form-control">
+              <option value="0">不保真</option>
+              <option value="1">保真</option>
+            </select>
+            <input type="number" id="pPrice" class="form-control" placeholder="价格 ¥" step="0.01">
+          </div>
+          <button class="btn btn-primary" onclick="savePricing()">保存定价</button>
+        </div>
+      </div>
+
+      <!-- 每日优惠 -->
+      <div id="dailyPanel" style="display:none;">
+        <p class="card-desc" style="margin-bottom:16px;">发布每日优惠券，用户申请时输入券码即可减免</p>
+        <div class="card" style="background:var(--color-bg);">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">
+            <div>
+              <label class="form-label">券数量</label>
+              <input type="number" id="dCount" class="form-control" value="5" min="1" max="50">
+            </div>
+            <div>
+              <label class="form-label">优惠类型</label>
+              <select id="dType" class="form-control">
+                <option value="full">全免（0元）</option>
+                <option value="fixed">减免金额</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">减免金额 ¥</label>
+              <input type="number" id="dValue" class="form-control" value="10" min="0" step="0.01">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="publishDaily()">发布每日优惠</button>
+        </div>
+        <div id="dailyResult" style="margin-top:20px;"></div>
       </div>
     </div>
   </div>
@@ -141,5 +200,121 @@ document.getElementById('publishForm').addEventListener('submit', async function
 });
 
 loadOrders('paid');
+
+// ============================================================
+// 标签切换
+// ============================================================
+function switchTab(tab) {
+  document.getElementById('orderPanel').style.display = tab === 'orders' ? 'block' : 'none';
+  document.getElementById('pricingPanel').style.display = tab === 'pricing' ? 'block' : 'none';
+  document.getElementById('dailyPanel').style.display = tab === 'daily' ? 'block' : 'none';
+
+  ['tabOrders', 'tabPricing', 'tabDaily'].forEach(id => {
+    document.getElementById(id).className = 'btn btn-sm btn-secondary';
+  });
+  const tabMap = {orders: 'tabOrders', pricing: 'tabPricing', daily: 'tabDaily'};
+  document.getElementById(tabMap[tab]).className = 'btn btn-sm btn-primary';
+
+  if (tab === 'pricing') loadPricing();
+}
+
+// ============================================================
+// 定价管理
+// ============================================================
+async function loadPricing() {
+  try {
+    const res = await fetch('/api/center/pricing/list');
+    const data = await res.json();
+    const grid = document.getElementById('pricingGrid');
+    if (!data.success || !data.data.length) {
+      grid.innerHTML = '<p style="color:var(--color-text-muted);grid-column:1/-1;text-align:center;">暂无定价数据</p>';
+      return;
+    }
+    grid.innerHTML = data.data.map(p => `
+      <div class="pricing-card">
+        <div style="font-size:13px;color:var(--color-text-muted);">
+          ${p.service_type === 'online' ? '线上' : '线下'} · ${p.box_type}${p.has_guarantee ? ' · 保真' : ''}
+        </div>
+        <div class="price-value">¥${p.price.toFixed(2)}</div>
+        <button class="btn btn-sm btn-secondary" onclick='editPricing(${JSON.stringify(p)})'>修改</button>
+      </div>
+    `).join('');
+  } catch (err) {
+    document.getElementById('pricingGrid').innerHTML = '<p style="color:var(--color-error);">加载失败</p>';
+  }
+}
+
+function editPricing(p) {
+  document.getElementById('pService').value = p.service_type;
+  document.getElementById('pBox').value = p.box_type;
+  document.getElementById('pGuarantee').value = String(p.has_guarantee);
+  document.getElementById('pPrice').value = p.price;
+  window._editingPricingId = p.id;
+}
+
+async function savePricing() {
+  const payload = {
+    id: window._editingPricingId || null,
+    service_type: document.getElementById('pService').value,
+    box_type: document.getElementById('pBox').value,
+    has_guarantee: parseInt(document.getElementById('pGuarantee').value),
+    price: parseFloat(document.getElementById('pPrice').value),
+  };
+  if (!payload.price || payload.price < 0) {
+    alert('请输入有效价格');
+    return;
+  }
+  try {
+    const res = await fetch('/api/center/pricing/update', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('定价已更新');
+      window._editingPricingId = null;
+      loadPricing();
+    } else {
+      alert(data.message || '保存失败');
+    }
+  } catch (err) {
+    alert('网络错误');
+  }
+}
+
+// ============================================================
+// 每日优惠
+// ============================================================
+async function publishDaily() {
+  const payload = {
+    count: parseInt(document.getElementById('dCount').value),
+    discount_type: document.getElementById('dType').value,
+    discount_value: parseFloat(document.getElementById('dValue').value),
+  };
+  try {
+    const res = await fetch('/api/center/pricing/daily', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      const el = document.getElementById('dailyResult');
+      el.innerHTML = `
+        <div class="card" style="background:var(--color-bg);">
+          <h4 style="margin-bottom:12px;">已生成 ${data.coupons.length} 张优惠券</h4>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${data.coupons.map(c => `<span class="badge badge-done" style="font-size:13px;padding:6px 12px;">${c}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      alert(data.message || '发布失败');
+    }
+  } catch (err) {
+    alert('网络错误');
+  }
+}
 </script>
 {% endblock %}
