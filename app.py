@@ -1,17 +1,31 @@
 import os
+from datetime import datetime, date
 from flask import Flask
+from flask.json.provider import DefaultJSONProvider
 from flask_login import LoginManager
 
 from config import Config
-from models import db, User
+from db import get_db, init_app as init_db_app, init_db_schema
+from models import User, get_user_by_id
 from center_app import center_bp
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+
+class ISODateJSONProvider(DefaultJSONProvider):
+    """将 datetime/date 序列化为 ISO 格式字符串，与前端解析保持一致"""
+    def default(self, o):
+        if isinstance(o, (datetime, date)):
+            return o.isoformat(sep=' ')
+        return super().default(o)
+
+
 app = Flask(__name__)
+app.json = ISODateJSONProvider(app)
 app.config.from_object(Config)
 
-db.init_app(app)
+# 注册数据库连接管理（请求结束自动关闭）
+init_db_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -23,7 +37,8 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    db = get_db()
+    return get_user_by_id(db, user_id)
 
 
 # 注册评级中心 Blueprint
@@ -35,14 +50,22 @@ app.register_blueprint(center_bp)
 # ============================================================
 
 def init_db():
+    """创建表 + 默认管理员"""
+    init_db_schema()
     with app.app_context():
-        db.create_all()
-        # 创建默认管理员（如果不存在）
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', email='admin@lanos.local', is_admin=1, is_rater=1)
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.commit()
+        db = get_db()
+        existing = db.execute(
+            "SELECT id FROM users WHERE username = 'admin'"
+        ).fetchone()
+        if not existing:
+            from werkzeug.security import generate_password_hash
+            db.execute(
+                "INSERT INTO users (username, email, password_hash, is_rater, is_admin, rater_department, rater_euid) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                ('admin', 'admin@lanos.local', generate_password_hash('admin123'),
+                 1, 1, 'jinan', 'EUID-CE-0001')
+            )
+            db.commit()
             print('默认管理员已创建: admin / admin123')
 
 

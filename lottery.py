@@ -1,69 +1,46 @@
 """
-LanOS 2.5 中秋抽奖脚本
-生成 5 个 EUID（中奖用户编号）+ 5 个 EFID（优惠券码）
-自动写入 lottery_records 和 coupons 表
+LanOS 2.5 中秋抽奖脚本（原生 sqlite3）
+生成 5 个 EUID + 5 个 EFID，写入 lottery_records 和 coupons 表
 
 用法：python lottery.py
 """
 import os
 import sys
-import random
-import string
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app
-from models import db, LotteryRecord, Coupon
+from db import init_db_schema, get_db
 from center_app import gen_euid, gen_efid
 
 
 def run_lottery(winners=None, count=5):
-    """
-    运行抽奖
-    winners: 可选，指定中奖用户名列表。如不指定则只生成 EUID
-    count: 生成数量，默认 5
-    """
+    init_db_schema()
     with app.app_context():
+        db = get_db()
         records = []
         for i in range(count):
             euid = gen_euid()
             efid = gen_efid()
-
-            # 确保唯一性
-            while LotteryRecord.query.filter_by(euid=euid).first():
+            while db.execute("SELECT id FROM lottery_records WHERE euid=?", (euid,)).fetchone():
                 euid = gen_euid()
-            while LotteryRecord.query.filter_by(efid=efid).first():
+            while db.execute("SELECT id FROM lottery_records WHERE efid=?", (efid,)).fetchone():
                 efid = gen_efid()
-            while Coupon.query.filter_by(efid=efid).first():
+            while db.execute("SELECT id FROM coupons WHERE efid=?", (efid,)).fetchone():
                 efid = gen_efid()
 
             username = winners[i] if winners and i < len(winners) else f'中奖用户{i+1}'
 
-            # 写入抽奖记录
-            record = LotteryRecord(
-                euid=euid,
-                efid=efid,
-                username=username,
-                prize_type='free_rating',
+            db.execute(
+                "INSERT INTO lottery_records (euid, efid, username, prize_type) VALUES (?, ?, ?, 'free_rating')",
+                (euid, efid, username)
             )
-            db.session.add(record)
-
-            # 写入优惠券表
-            coupon = Coupon(
-                efid=efid,
-                discount_type='full',
-                discount_value=0,
-                is_used=0,
+            db.execute(
+                "INSERT INTO coupons (efid, discount_type, discount_value, is_used) VALUES (?, 'full', 0, 0)",
+                (efid,)
             )
-            db.session.add(coupon)
-
-            records.append({
-                'euid': euid,
-                'efid': efid,
-                'username': username,
-            })
-
-        db.session.commit()
+            records.append({'euid': euid, 'efid': efid, 'username': username})
+        db.commit()
 
         print('=== 中秋抽奖结果 ===')
         print()
@@ -76,7 +53,7 @@ def run_lottery(winners=None, count=5):
         print()
         print('中奖名单文案（可直接复制发群）：')
         print('─' * 40)
-        for i, r in enumerate(records):
+        for r in records:
             print(f'🏆 {r["username"]} - 券码：{r["efid"]}')
         print('─' * 40)
         print()
@@ -88,12 +65,9 @@ def run_lottery(winners=None, count=5):
             print(f'使用方式：申请评级时输入此券码，即可免费评级一次。')
             print()
         print('─' * 40)
-
         return records
 
 
 if __name__ == '__main__':
-    # 如有中奖用户名，在此指定
-    # winners = ['张三', '李四', '王五', '赵六', '钱七']
     winners = None
     run_lottery(winners=winners, count=5)
