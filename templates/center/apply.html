@@ -1,5 +1,5 @@
 {% extends "base_center.html" %}
-{% block title %}申请评级 - 樟嘉评级中心{% endblock %}
+{% block title %}申请评级 - 樟嘉评级{% endblock %}
 
 {% block content %}
 <section style="padding:48px 0;">
@@ -29,6 +29,14 @@
       </div>
 
       <form id="applyForm" enctype="multipart/form-data">
+        {% if current_user.is_authenticated and current_user.admin_level >= 1 %}
+        <div class="form-group" style="background:#F7EED3; border-radius:12px; padding:12px; border-left:3px solid #C9A227;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+            <input type="checkbox" id="testMode" name="test_mode" value="1" style="width:auto;">
+            <span style="font-size:13px; color:#6B6357;">🧪 测试模式（跳过支付，仅管理员可用）</span>
+          </label>
+        </div>
+        {% endif %}
         <div class="form-group">
           <label class="form-label">评级部门 *</label>
           <select name="department" class="form-control" id="department" required onchange="updatePrice()">

@@ -1,9 +1,32 @@
+# SQLite 运行时文件
+*.db-shm
+*.db-wal
+*.db-journal
+
+# 备份文件
+*.bak
+*.bak_*
+*.old
+*.old_backup
+*.trae
+*.lanos2
+
+# Python
 __pycache__/
 *.pyc
-*.pyo
-*.db-journal
-uploads/
-*.log
-.env
 venv/
 .venv/
+
+# 日志
+*.log
+nohup.out
+
+# 压缩包
+lanos2.5_*.tar.gz
+
+# 安全快照
+.lansafe_snapshots/
+
+# 上传的临时文件（保留 .gitkeep）
+uploads/*
+!uploads/.gitkeep

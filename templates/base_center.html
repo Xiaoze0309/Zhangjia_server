@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}樟嘉评级中心{% endblock %}</title>
+  <title>{% block title %}樟嘉评级{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block head %}{% endblock %}
 </head>
@@ -11,7 +11,10 @@
   {% block navbar %}
   <nav class="navbar">
     <div class="navbar-inner">
-      <a href="{{ url_for('center.index') }}" class="navbar-brand">樟嘉评级中心</a>
+      <a href="{{ url_for('center.index') }}" class="navbar-brand" style="display:flex; align-items:center; gap:8px;">
+    <img src="/static/favicon.jpg" style="width:28px; height:28px; border-radius:50%;" alt="樟嘉">
+    <span>樟嘉评级</span>
+  </a>
       <div class="navbar-nav">
         <a href="{{ url_for('center.center_index') }}" class="{% if request.endpoint == 'center.center_index' %}active{% endif %}">首页</a>
         <a href="{{ url_for('center.center_apply') }}">申请评级</a>

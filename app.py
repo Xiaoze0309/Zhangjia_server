@@ -20,9 +20,16 @@ def gen_epid():
     rand = ''.join(secrets.choice(alphabet) for _ in range(12))
     return f"EPID-{ts}-{rand}"
 
+def gen_test_epid():
+    """生成测试单 EPID：EPID-TEXT-6位数字"""
+    while True:
+        code = ''.join(str(secrets.randbelow(10)) for _ in range(6))
+        epid = f"EPID-TEXT-{code}"
+        with get_db() as conn:
+            if not conn.execute("SELECT id FROM cert_orders WHERE order_no=?", (epid,)).fetchone():
+                return epid
+
 app = Flask(__name__)
-from models import db
-db.init_app(app)
 app.register_blueprint(center_bp)
 app.secret_key = 'zhangjia-2026-fixed-secret-key'
 app.config['REMEMBER_COOKIE_DURATION'] = datetime.timedelta(days=30)

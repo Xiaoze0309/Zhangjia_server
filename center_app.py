@@ -317,6 +317,7 @@ def api_apply():
     box_type = request.form.get('box_type', 'PLA').strip()
     has_guarantee = int(request.form.get('has_guarantee', 0))
     coupon_code = request.form.get('coupon_code', '').strip()
+    test_mode = request.form.get('test_mode', '0') == '1'
 
     if not contact or not coin_name:
         return jsonify({'success': False, 'message': '联系方式和币种名称必填'}), 400
@@ -347,18 +348,35 @@ def api_apply():
             if path:
                 images.append(path)
 
-    order_no = gen_epid()
+    # 测试模式：仅管理员可用，跳过支付
+    is_test = 0
+    if test_mode and (getattr(current_user, 'admin_level', 0) or 0) >= 1:
+        import secrets as _sec
+        while True:
+            code = ''.join(str(_sec.randbelow(10)) for _ in range(6))
+            order_no = f"EPID-TEXT-{code}"
+            if not db.execute("SELECT id FROM cert_orders WHERE order_no=?", (order_no,)).fetchone():
+                break
+        base_price = 0
+        final_price = 0
+        init_status = 'paid'
+        is_test = 1
+        print(f"[TEST] 测试单生成：{order_no}")
+    else:
+        order_no = gen_epid()
+        init_status = 'pending'
+
     db.execute(
         "INSERT INTO cert_orders (order_no, user_id, contact, coin_name, coin_era, coin_desc, "
         "coin_images, department, service_type, box_type, has_guarantee, base_price, final_price, "
-        "coupon_code, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "coupon_code, status, is_test) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (order_no, current_user.id, contact, coin_name, coin_era, coin_desc,
          json.dumps(images, ensure_ascii=False) if images else None,
          department, service_type, box_type, has_guarantee, base_price, final_price,
-         coupon_code if coupon else None, 'pending')
+         coupon_code if coupon else None, init_status, is_test)
     )
 
-    if coupon:
+    if coupon and not is_test:
         db.execute(
             "UPDATE coupons SET is_used=1, used_by=?, used_order=?, used_at=? WHERE id=?",
             (current_user.id, order_no, datetime.utcnow().isoformat(), coupon['id'])
@@ -367,10 +385,11 @@ def api_apply():
 
     return jsonify({
         'success': True,
-        'message': '申请提交成功',
+        'message': '测试单已提交（已跳过支付）' if is_test else '申请提交成功',
         'order_no': order_no,
         'base_price': base_price,
         'final_price': final_price,
+        'is_test': is_test,
         'redirect': url_for('center.center_pay', order_no=order_no),
     })
 
