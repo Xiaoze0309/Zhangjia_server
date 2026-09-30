@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app
-from db import init_db_schema, get_db
+from db import migrate_db, get_db
 from center_app import gen_efid
 from werkzeug.security import generate_password_hash
 
@@ -98,7 +98,7 @@ def init_coupons(db, count=5):
 
 
 def main():
-    init_db_schema()
+    migrate_db()
     with app.app_context():
         db = get_db()
         print('=== LanOS 2.5 数据库初始化 ===')

@@ -5,13 +5,17 @@ import string
 import time
 from datetime import datetime
 from flask import (Blueprint, render_template, request, redirect, url_for,
-                   jsonify, send_from_directory, abort, flash, current_app)
+                   jsonify, send_from_directory, abort, flash, current_app,
+                   send_file, Response)
 from flask_login import login_user, logout_user, current_user
 
 from config import Config
 from db import get_db
 from models import User, get_user_by_username, order_to_dict
 from decorators import login_required, rater_required, admin_required
+from codes import (gen_zj_code, gen_qrcode_image, gen_barcode_image,
+                   build_data_code_url, build_wx_code_url)
+from cert_gen import generate_certificate
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -39,8 +43,6 @@ def get_site_type(host):
     host = host.lower()
     if host.startswith('intro.'):
         return 'intro'
-    if host.startswith('talk.'):
-        return 'talk'
     if host.startswith('beta.'):
         return 'beta'
     if 'zhangjiacenter' in host:
@@ -112,6 +114,24 @@ def get_departments(db):
     ).fetchall()
 
 
+def get_base_url():
+    """根据请求 host 推断站点基础 URL"""
+    host = request.host or 'zhangjiacenter.dpdns.org'
+    scheme = request.scheme or 'https'
+    return f'{scheme}://{host}'
+
+
+def record_scan(db, esid=None, zj_hash=None, scan_type='public', user_id=None):
+    """记录扫码日志"""
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr) or ''
+    ua = request.headers.get('User-Agent', '')[:500]
+    db.execute(
+        "INSERT INTO scan_logs (esid, zj_hash, scan_type, user_id, ip, user_agent) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (esid, zj_hash, scan_type, user_id, ip, ua)
+    )
+
+
 # ============================================================
 # 首页分流
 # ============================================================
@@ -122,13 +142,12 @@ def index():
     site = get_site_type(host)
     if site == 'intro':
         return render_template('intro.html')
-    if site == 'talk':
-        return render_template('talk.html')
     if site == 'beta':
         return render_template('beta/index.html')
     if site == 'center':
         return render_template('center/index.html')
-    return render_template('index.html')
+    # 主站 = 论坛
+    return render_template('talk.html')
 
 
 @center_bp.route('/about')
@@ -508,23 +527,62 @@ def api_rater_publish():
     if cert_images and isinstance(cert_images, list):
         cert_images = json.dumps(cert_images, ensure_ascii=False)
 
+    # 生成樟嘉码：ZJ-{Base32(SHA256(EPID|ESID|ETID|SALT))[:22]}
+    # EPID = order_no, ESID = cert_no, ETID = 评级师 EUID
+    etid = current_user.rater_euid or f'EUID-CE-{int(current_user.id):04d}'
+    zj_code = gen_zj_code(order_no, cert_no, etid)
+
+    # 评级师姓名 / 部门名
+    rater_name = current_user.username
+    dept_name = order['department']
+    if order['department']:
+        dept_row = db.execute(
+            "SELECT name FROM departments WHERE slug=?", (order['department'],)
+        ).fetchone()
+        if dept_row:
+            dept_name = dept_row['name']
+
     db.execute(
         "UPDATE cert_orders SET cert_no=?, cert_result=?, cert_images=?, tracking_no=?, "
-        "return_address=?, rater_id=?, status='done', updated_at=? WHERE order_no=?",
+        "return_address=?, rater_id=?, zj_hash=?, status='done', updated_at=? WHERE order_no=?",
         (cert_no, cert_result, cert_images, tracking_no or None,
-         return_address or None, current_user.id, datetime.utcnow().isoformat(), order_no)
+         return_address or None, current_user.id, zj_code,
+         datetime.utcnow().isoformat(), order_no)
     )
     db.commit()
+
+    # 生成电子证书 PNG 并保存
+    try:
+        base_url = get_base_url()
+        order_dict = dict(order)
+        order_dict['cert_no'] = cert_no
+        order_dict['zj_hash'] = zj_code
+        order_dict['updated_at'] = datetime.utcnow()
+        data_qr_buf = gen_qrcode_image(build_data_code_url(base_url, cert_no))
+        wx_qr_buf = gen_qrcode_image(build_wx_code_url(base_url, cert_no))
+        zj_barcode_buf = gen_barcode_image(zj_code)
+        cert_buf = generate_certificate(
+            order_dict, rater_name, dept_name,
+            current_app.config['UPLOAD_FOLDER'], base_url,
+            data_qr_buf, wx_qr_buf, zj_barcode_buf,
+        )
+        cert_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'certs')
+        os.makedirs(cert_dir, exist_ok=True)
+        cert_path = os.path.join(cert_dir, f'{cert_no}.png')
+        with open(cert_path, 'wb') as f:
+            f.write(cert_buf.read())
+    except Exception as e:
+        current_app.logger.warning(f'证书生成失败: {e}')
 
     if order['user_id']:
         send_notification(
             user_id=order['user_id'],
             title='评级结果已发布',
-            content=f'您的订单 {order_no}（{order["coin_name"]}）评级已完成，证书号：{cert_no}',
+            content=f'您的订单 {order_no}（{order["coin_name"]}）评级已完成，证书号：{cert_no}，点击查看电子证书',
             notif_type='order',
-            link=url_for('center.center_query', keyword=order_no),
+            link=url_for('center.cert_view', order_no=order_no),
         )
-    return jsonify({'success': True, 'message': '评级结果已发布'})
+    return jsonify({'success': True, 'message': '评级结果已发布', 'zj_code': zj_code})
 
 
 @center_bp.route('/api/center/rater/grant', methods=['POST'])
@@ -759,6 +817,238 @@ def download_file(filename):
 @center_bp.route('/downloads')
 def downloads_page():
     return render_template('download.html')
+
+
+# ============================================================
+# 电子证书
+# ============================================================
+
+@center_bp.route('/cert/<order_no>')
+def cert_view(order_no):
+    """在线查看电子证书"""
+    db = get_db()
+    order = db.execute("SELECT * FROM cert_orders WHERE order_no=?", (order_no,)).fetchone()
+    if not order:
+        abort(404)
+    # 公开信息
+    dept_name = order['department']
+    if order['department']:
+        d = db.execute("SELECT name FROM departments WHERE slug=?", (order['department'],)).fetchone()
+        if d:
+            dept_name = d['name']
+    rater_name = ''
+    if order['rater_id']:
+        r = db.execute("SELECT username FROM users WHERE id=?", (order['rater_id'],)).fetchone()
+        if r:
+            rater_name = r['username']
+    return render_template('center/cert.html', order=order,
+                           dept_name=dept_name, rater_name=rater_name)
+
+
+@center_bp.route('/api/center/certificate/<order_no>')
+def api_certificate_download(order_no):
+    """下载电子证书 PNG"""
+    db = get_db()
+    order = db.execute("SELECT * FROM cert_orders WHERE order_no=?", (order_no,)).fetchone()
+    if not order or not order['cert_no']:
+        abort(404)
+    cert_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'certs', f"{order['cert_no']}.png")
+    if os.path.exists(cert_path):
+        return send_file(cert_path, mimetype='image/png',
+                         as_attachment=False, download_name=f"{order['cert_no']}.png")
+    # 证书文件不存在，实时生成
+    base_url = get_base_url()
+    order_dict = dict(order)
+    rater_name = ''
+    if order['rater_id']:
+        r = db.execute("SELECT username, rater_euid FROM users WHERE id=?",
+                       (order['rater_id'],)).fetchone()
+        if r:
+            rater_name = r['username']
+    dept_name = order['department']
+    if order['department']:
+        d = db.execute("SELECT name FROM departments WHERE slug=?", (order['department'],)).fetchone()
+        if d:
+            dept_name = d['name']
+    data_qr_buf = gen_qrcode_image(build_data_code_url(base_url, order['cert_no']))
+    wx_qr_buf = gen_qrcode_image(build_wx_code_url(base_url, order['cert_no']))
+    zj_barcode_buf = gen_barcode_image(order['zj_hash'] or '')
+    buf = generate_certificate(
+        order_dict, rater_name, dept_name,
+        current_app.config['UPLOAD_FOLDER'], base_url,
+        data_qr_buf, wx_qr_buf, zj_barcode_buf,
+    )
+    return send_file(buf, mimetype='image/png',
+                     as_attachment=False, download_name=f"{order['cert_no']}.png")
+
+
+# ============================================================
+# 公开证书页 / 公众号 / NFC
+# ============================================================
+
+# 公众号链接（可在 config 中配置）
+WX_PUBLIC_URL = 'https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=zhangjia'
+
+
+@center_bp.route('/v/<esid>')
+def public_cert(esid):
+    """公开证书页：显示 ESID、币名、评级、部门、评级师、时间、评级后图"""
+    db = get_db()
+    order = db.execute("SELECT * FROM cert_orders WHERE cert_no=?", (esid,)).fetchone()
+    if not order:
+        abort(404)
+    dept_name = order['department']
+    if order['department']:
+        d = db.execute("SELECT name FROM departments WHERE slug=?", (order['department'],)).fetchone()
+        if d:
+            dept_name = d['name']
+    rater_name = ''
+    if order['rater_id']:
+        r = db.execute("SELECT username FROM users WHERE id=?", (order['rater_id'],)).fetchone()
+        if r:
+            rater_name = r['username']
+    # 解析评级结果 JSON
+    cert_result = None
+    if order['cert_result']:
+        try:
+            cert_result = json.loads(order['cert_result'])
+        except Exception:
+            cert_result = order['cert_result']
+    # 评级后图
+    cert_images = None
+    if order['cert_images']:
+        try:
+            cert_images = json.loads(order['cert_images'])
+        except Exception:
+            pass
+    # 记录访问
+    record_scan(db, esid=esid, scan_type='public')
+    db.commit()
+    return render_template('center/public_cert.html', order=order,
+                           dept_name=dept_name, rater_name=rater_name,
+                           cert_result=cert_result, cert_images=cert_images)
+
+
+@center_bp.route('/wx/<esid>')
+def wx_redirect(esid):
+    """公众号跳转：记录扫码，302 重定向到公众号"""
+    db = get_db()
+    # 校验 ESID 是否存在
+    order = db.execute("SELECT id FROM cert_orders WHERE cert_no=?", (esid,)).fetchone()
+    record_scan(db, esid=esid, scan_type='wx')
+    db.commit()
+    if not order:
+        abort(404)
+    return redirect(WX_PUBLIC_URL, code=302)
+
+
+@center_bp.route('/nfc/<esid>')
+def nfc_entry(esid):
+    """NFC 入口：管理员 → 完整视图，普通人 → 跳公众号"""
+    db = get_db()
+    order = db.execute("SELECT * FROM cert_orders WHERE cert_no=?", (esid,)).fetchone()
+    if not order:
+        abort(404)
+    user_id = current_user.id if current_user.is_authenticated else None
+    record_scan(db, esid=esid, scan_type='nfc', user_id=user_id)
+    db.commit()
+    is_admin = current_user.is_authenticated and current_user.is_admin_user
+    if is_admin:
+        # 管理员：展示完整数据（含三码、原图、时间线）
+        return redirect(url_for('center.cert_view', order_no=order['order_no']))
+    # 普通人：跳公众号
+    return redirect(url_for('center.wx_redirect', esid=esid))
+
+
+# ============================================================
+# 管理员扫码
+# ============================================================
+
+@center_bp.route('/api/center/admin_scan', methods=['POST'])
+@admin_required
+def api_admin_scan():
+    """
+    管理员扫码：接收 ZJ-哈希，查 zj_hash 字段，三码交叉校验
+    返回完整数据：三码 + 原图 + 时间线 + 版别
+    权限：管理员（is_admin == 1）
+    """
+    data = request.get_json() if request.is_json else request.form
+    zj_code = (data.get('zj_code') or data.get('zj_hash') or '').strip()
+    if not zj_code:
+        return jsonify({'success': False, 'message': '樟嘉码不能为空'}), 400
+
+    db = get_db()
+    order = db.execute(
+        "SELECT * FROM cert_orders WHERE zj_hash=?", (zj_code,)
+    ).fetchone()
+    if not order:
+        return jsonify({'success': False, 'message': '未找到匹配的证书记录'}), 404
+
+    # 三码交叉校验
+    rater = db.execute(
+        "SELECT rater_euid FROM users WHERE id=?", (order['rater_id'],)
+    ).fetchone() if order['rater_id'] else None
+    etid = rater['rater_euid'] if rater and rater['rater_euid'] else ''
+    expected_zj = gen_zj_code(order['order_no'], order['cert_no'] or '', etid)
+    code_match = (expected_zj == order['zj_hash'])
+
+    record_scan(db, esid=order['cert_no'], zj_hash=zj_code,
+                scan_type='admin', user_id=current_user.id)
+    db.commit()
+
+    # 组装完整数据
+    base_url = get_base_url()
+    o = dict(order)
+    result = {
+        'order_no': o['order_no'],          # EPID
+        'cert_no': o['cert_no'],             # ESID
+        'zj_hash': o['zj_hash'],
+        'coin_name': o['coin_name'],
+        'coin_era': o['coin_era'],
+        'coin_variety': o['coin_variety'],
+        'department': o['department'],
+        'status': o['status'],
+        'created_at': o['created_at'],
+        'updated_at': o['updated_at'],
+        'code_verified': code_match,
+        'data_code_url': build_data_code_url(base_url, o['cert_no']) if o['cert_no'] else None,
+        'wx_code_url': build_wx_code_url(base_url, o['cert_no']) if o['cert_no'] else None,
+    }
+    # 原图（评级前）
+    if o.get('coin_images'):
+        try:
+            result['coin_images'] = json.loads(o['coin_images'])
+        except Exception:
+            result['coin_images'] = o['coin_images']
+    # 评级结果
+    if o.get('cert_result'):
+        try:
+            result['cert_result'] = json.loads(o['cert_result'])
+        except Exception:
+            result['cert_result'] = o['cert_result']
+    # 评级后图
+    if o.get('cert_images'):
+        try:
+            result['cert_images'] = json.loads(o['cert_images'])
+        except Exception:
+            result['cert_images'] = o['cert_images']
+    return jsonify({'success': True, 'data': result})
+
+
+# ============================================================
+# 条形码 / 二维码图片接口（管理员用）
+# ============================================================
+
+@center_bp.route('/api/center/barcode/<esid>')
+@admin_required
+def api_barcode(esid):
+    """生成樟嘉码条形码（Code128）"""
+    db = get_db()
+    order = db.execute("SELECT zj_hash FROM cert_orders WHERE cert_no=?", (esid,)).fetchone()
+    if not order or not order['zj_hash']:
+        abort(404)
+    buf = gen_barcode_image(order['zj_hash'])
+    return send_file(buf, mimetype='image/png')
 
 
 # ============================================================

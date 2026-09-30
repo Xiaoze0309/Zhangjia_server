@@ -116,6 +116,7 @@ body{background:var(--cream);color:var(--dark);font-family:-apple-system,"PingFa
   <p class="sub">始于初心 · 终于梦想</p>
   <p class="desc">新兴的评级工作室，以人文关怀为中心<br>服务于每一个人，为发烧而生，为创新而生</p>
   <a href="https://www.zhangjiacoins.dpdns.org" class="btn-main">进入主站</a>
+  <a href="https://zhangjiacenter.dpdns.org" class="btn-main" style="background:var(--gold);color:#fff;margin-top:12px;">进入评级中心</a>
   <div class="scroll">↓</div>
 </section>
 
@@ -178,90 +179,22 @@ body{background:var(--cream);color:var(--dark);font-family:-apple-system,"PingFa
       <div class="tl-name">雨后新生</div>
       <div class="tl-desc">网站正式可稳定受公网访问，在补丁同时加入了部分功能与 UI/UX 的改变。</div>
     </div>
+    <div class="tl-item">
+      <div class="tl-ver">LANOS 2</div>
+      <div class="tl-name">事事顺心</div>
+      <div class="tl-desc">隧道服务与 UI/UX 大改，双站架构成型，社区与评级中心并驾齐驱。</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-ver">LANOS 3</div>
+      <div class="tl-name">顺畅如水，简约如风</div>
+      <div class="tl-desc">三站架构 · 电子证书 · 三码防伪 · NFC 入口，藏友数字生态全新升级。</div>
+    </div>
   </div>
 </section>
 
-<!-- ===== 底层介绍 ===== -->
-<section class="section">
-  <h2 class="sec-title">底层介绍</h2>
-  <p class="sec-sub">支撑 LanOS 的技术底座</p>
-
-  <div class="card">
-    <h3><span class="num">01</span>Podroid</h3>
-    <p>基于 Alpine Linux 的移动端 QEMU 虚拟机，主打图形界面，流畅使用，一目了然。让手机也能成为真正的 Linux 服务器。</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="num">02</span>Cloudflare</h3>
-    <p>全球体量极大的云服务，业务范围对基本功能实现了全面覆盖。为 LanOS 提供稳定的公网访问与安全防护。</p>
-  </div>
-</section>
-
-<!-- ===== 鸣谢 ===== -->
-<section class="section">
-  <h2 class="sec-title">测试用户鸣谢</h2>
-  <p class="sec-sub">感谢每一位早期参与者</p>
-
-  <div class="thanks">
-    <div class="thanks-item">济南樟嘉</div>
-    <div class="thanks-item">北海樟嘉</div>
-    <div class="thanks-item">河池樟嘉</div>
-    <div class="thanks-item">灵宝忆夕古泉甄选单位</div>
-  </div>
-</section>
-
-<!-- ===== CTA ===== -->
-<section class="section" style="text-align:center;">
-  <h2 class="sec-title">立即体验</h2>
-  <p class="sec-sub">加入 LanOS 生态</p>
-  <div class="cta">
-    <a href="https://www.zhangjiacoins.dpdns.org" class="btn-main">进入主站</a>
-  </div>
-</section>
-
-<!-- ===== 页脚 ===== -->
-<footer class="foot">
-  <p class="slogan">始于初心 · 终于梦想</p>
-  <p>© 2026 樟嘉评级 · LanOS 生态</p>
-  <p class="v">LanOS 1.26.90110501.ALWNCFSAE</p>
+<footer class="footer">
+  <div>© 2026 樟嘉评级 · LanOS 生态</div>
 </footer>
-
-<script>
-// 滚动动画
-const obs = new IntersectionObserver((entries)=>{
-  entries.forEach((e,i)=>{
-    if(e.isIntersecting){
-      setTimeout(()=>e.target.classList.add('visible'), i*80);
-      obs.unobserve(e.target);
-    }
-  });
-},{threshold:.12});
-document.querySelectorAll('.card,.eco,.tl-item,.thanks-item').forEach(el=>obs.observe(el));
-
-// 连点 Logo 5 次触发古币雨
-let clicks=0,timer=null;
-document.getElementById('heroLogo').addEventListener('click',()=>{
-  clicks++;clearTimeout(timer);
-  if(clicks>=5){coinRain();clicks=0;}
-  else{timer=setTimeout(()=>clicks=0,1000);}
-});
-function coinRain(){
-  for(let i=0;i<40;i++){
-    const c=document.createElement('div');
-    c.className='coin-rain';c.textContent='🪙';
-    c.style.left=Math.random()*100+'vw';c.style.top='-50px';
-    c.style.fontSize=(16+Math.random()*30)+'px';
-    c.style.animationDuration=(2+Math.random()*2)+'s';
-    c.style.animationDelay=(Math.random()*.6)+'s';
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(),5000);
-  }
-}
-
-console.log('%c🪙 樟嘉评级 · LanOS 生态', 'color:#c9a227;font-size:24px;font-weight:bold;');
-console.log('%cLanOS · LanSafe OS · LanShow OS', 'color:#6b6357;font-size:14px;');
-console.log('%c始于初心，终于梦想。', 'color:#c9a227;font-size:12px;');
-</script>
 
 </body>
 </html>

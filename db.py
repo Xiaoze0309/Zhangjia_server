@@ -148,6 +148,8 @@ CREATE TABLE IF NOT EXISTS cert_orders (
     rater_id INTEGER,
     tracking_no TEXT,
     return_address TEXT,
+    zj_hash TEXT,
+    coin_variety TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -156,7 +158,40 @@ CREATE INDEX IF NOT EXISTS idx_orders_order_no ON cert_orders(order_no);
 CREATE INDEX IF NOT EXISTS idx_orders_cert_no ON cert_orders(cert_no);
 CREATE INDEX IF NOT EXISTS idx_orders_contact ON cert_orders(contact);
 CREATE INDEX IF NOT EXISTS idx_orders_dept ON cert_orders(department);
+CREATE INDEX IF NOT EXISTS idx_cert_orders_zj_hash ON cert_orders(zj_hash);
+
+CREATE TABLE IF NOT EXISTS scan_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    esid TEXT,
+    zj_hash TEXT,
+    scan_type TEXT DEFAULT 'public',
+    user_id INTEGER,
+    ip TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_scan_logs_esid ON scan_logs(esid);
 """
+
+
+def _column_exists(conn, table, column):
+    """检查某表是否已有某列（用于幂等迁移）"""
+    cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+    return column in cols
+
+
+def migrate_db():
+    """对已有库做增量迁移：加列、建表、建索引"""
+    # 先建表（新库直接含全部字段；旧库补缺失表）
+    init_db_schema()
+    conn = sqlite3.connect(DATABASE)
+    # cert_orders 新字段（旧库增量迁移）
+    if not _column_exists(conn, 'cert_orders', 'zj_hash'):
+        conn.execute("ALTER TABLE cert_orders ADD COLUMN zj_hash TEXT")
+    if not _column_exists(conn, 'cert_orders', 'coin_variety'):
+        conn.execute("ALTER TABLE cert_orders ADD COLUMN coin_variety TEXT")
+    conn.commit()
+    conn.close()
 
 
 def init_db_schema():

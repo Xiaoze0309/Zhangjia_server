@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>樟嘉评级 · 证书验证</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #FAF8F3;
+      color: #2a2a2a;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .cert-card {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(201,162,39,.08);
+      overflow: hidden;
+    }
+    .cert-header {
+      background: linear-gradient(135deg, #C9A227, #d4b54a);
+      color: #fff;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .cert-header h1 { font-size: 22px; margin-bottom: 6px; }
+    .cert-header .esid { font-size: 14px; opacity:.9; font-family: monospace; }
+    .cert-body { padding: 24px; }
+    .cert-img {
+      width: 100%;
+      border-radius: 12px;
+      background: #f5f5f5;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0ece3;
+      font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #8a8275; }
+    .info-value { font-weight: 600; color: #2a2a2a; text-align: right; }
+    .grade-box {
+      text-align: center;
+      padding: 16px;
+      background: #FAF8F3;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .grade-label { font-size: 12px; color: #8a8275; margin-bottom: 4px; }
+    .grade-value { font-size: 28px; font-weight: 700; color: #C9A227; }
+    .footer { text-align:center; padding: 16px; font-size: 12px; color: #b0a898; }
+    .no-img {
+      width: 100%; height: 200px; border-radius: 12px; background: #f5f5f5;
+      display:flex; align-items:center; justify-content:center; color:#b0a898;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="cert-card">
+    <div class="cert-header">
+      <h1>樟嘉评级证书</h1>
+      <div class="esid">ESID · {{ order.cert_no }}</div>
+    </div>
+    <div class="cert-body">
+      {% if cert_images and cert_images is iterable and cert_images is not string %}
+        {% for img in cert_images %}
+          <img src="/{{ img }}" class="cert-img" alt="评级后图">
+        {% endfor %}
+      {% else %}
+        <div class="no-img">暂无评级后图片</div>
+      {% endif %}
+
+      {% if cert_result %}
+      <div class="grade-box">
+        <div class="grade-label">评级</div>
+        <div class="grade-value">
+          {% if cert_result is mapping %}
+            {{ cert_result.get('grade', '—') }}
+          {% else %}
+            {{ cert_result }}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="info-row">
+        <span class="info-label">币种名称</span>
+        <span class="info-value">{{ order.coin_name }}</span>
+      </div>
+      {% if order.coin_era %}
+      <div class="info-row">
+        <span class="info-label">年代</span>
+        <span class="info-value">{{ order.coin_era }}</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">评级部门</span>
+        <span class="info-value">{{ dept_name }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">评级师</span>
+        <span class="info-value">{{ rater_name }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">签发时间</span>
+        <span class="info-value">{{ order.updated_at.strftime('%Y-%m-%d %H:%M') if order.updated_at else '—' }}</span>
+      </div>
+    </div>
+    <div class="footer">© 2026 樟嘉评级 · LanOS 3.0 · 本证书由樟嘉评级中心签发</div>
+  </div>
+</body>
+</html>

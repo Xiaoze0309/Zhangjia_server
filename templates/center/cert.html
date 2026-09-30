@@ -1,0 +1,48 @@
+{% extends "base_center.html" %}
+{% block title %}电子证书 - 樟嘉评级{% endblock %}
+
+{% block content %}
+<section style="padding:32px 0;">
+  <div class="container-sm">
+    <div class="card" style="text-align:center;">
+      <h2 class="card-title" style="margin-bottom:4px;">樟嘉评级电子证书</h2>
+      <p style="color:var(--color-text-muted);font-size:14px;margin-bottom:24px;">ESID · {{ order.cert_no }}</p>
+
+      {% if order.cert_no %}
+      <div style="margin-bottom:20px;">
+        <img src="{{ url_for('center.api_certificate_download', order_no=order.order_no) }}"
+             alt="电子证书" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(201,162,39,.15);">
+      </div>
+      <a href="{{ url_for('center.api_certificate_download', order_no=order.order_no) }}"
+         class="btn btn-primary" style="display:inline-block;">下载证书 PNG</a>
+      {% else %}
+      <p style="color:var(--color-text-secondary);">该订单尚未生成电子证书</p>
+      {% endif %}
+    </div>
+
+    {% if order.cert_no %}
+    <div class="card" style="margin-top:20px;">
+      <h3 style="font-size:18px;margin-bottom:16px;">证书信息</h3>
+      <table class="table">
+        <tr><th style="width:30%;">ESID（证书号）</th><td>{{ order.cert_no }}</td></tr>
+        <tr><th>币种名称</th><td>{{ order.coin_name }}</td></tr>
+        <tr><th>年代</th><td>{{ order.coin_era or '—' }}</td></tr>
+        <tr><th>评级部门</th><td>{{ dept_name }}</td></tr>
+        <tr><th>评级师</th><td>{{ rater_name }}</td></tr>
+        <tr><th>签发时间</th><td>{{ order.updated_at.strftime('%Y-%m-%d %H:%M') if order.updated_at else '—' }}</td></tr>
+        {% if order.zj_hash %}
+        <tr><th>樟嘉码</th><td style="font-family:monospace;">{{ order.zj_hash }}</td></tr>
+        {% endif %}
+      </table>
+
+      <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
+        <a href="{{ url_for('center.public_cert', esid=order.cert_no) }}" class="btn btn-secondary" target="_blank">公开验证页</a>
+        {% if order.zj_hash %}
+        <a href="{{ url_for('center.api_barcode', esid=order.cert_no) }}" class="btn btn-secondary" target="_blank">樟嘉码条形码</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

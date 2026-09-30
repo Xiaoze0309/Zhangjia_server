@@ -8,6 +8,9 @@ from functools import wraps
 
 from security import init_all_security, admin_required, owner_required, rate_limit
 
+from config import Config
+from db import get_db as center_get_db, init_app as init_db_app, migrate_db
+from models import User, get_user_by_id
 from center_app import center_bp
 
 TZ_BEIJING = datetime.timezone(datetime.timedelta(hours=8))
@@ -35,6 +38,7 @@ app.secret_key = 'zhangjia-2026-fixed-secret-key'
 app.config['REMEMBER_COOKIE_DURATION'] = datetime.timedelta(days=30)
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=30)
 init_all_security(app)
+init_db_app(app)  # 注册 db.py 的请求级连接自动关闭
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -1494,6 +1498,7 @@ def pwa_manifest():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+<<<<<<< HEAD
 # ========== 全局异常日志（调试用） ==========
 @app.errorhandler(Exception)
 def handle_all_exceptions(e):
@@ -1507,6 +1512,31 @@ def handle_all_exceptions(e):
     print(traceback.format_exc())
     print("=================================\n")
     return jsonify({'error': str(e)}), 500
+=======
+# ============================================================
+# 数据库初始化
+# ============================================================
+
+def init_db():
+    """创建表 + 迁移 + 默认管理员"""
+    migrate_db()
+    with app.app_context():
+        db = get_db()
+        existing = db.execute(
+            "SELECT id FROM users WHERE username = 'admin'"
+        ).fetchone()
+        if not existing:
+            from werkzeug.security import generate_password_hash
+            db.execute(
+                "INSERT INTO users (username, email, password_hash, is_rater, is_admin, rater_department, rater_euid) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                ('admin', 'admin@lanos.local', generate_password_hash('admin123'),
+                 1, 1, 'jinan', 'EUID-CE-0001')
+            )
+            db.commit()
+            print('默认管理员已创建: admin / admin123')
+
+>>>>>>> c4ebd81 (feat: LanOS 3.0 - 电子证书 + 三码体系 + NFC + 主站重构)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

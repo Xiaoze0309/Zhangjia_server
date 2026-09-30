@@ -10,12 +10,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app
-from db import init_db_schema, get_db
+from db import migrate_db, get_db
 from center_app import gen_euid, gen_efid
 
 
 def run_lottery(winners=None, count=5):
-    init_db_schema()
+    migrate_db()
     with app.app_context():
         db = get_db()
         records = []
